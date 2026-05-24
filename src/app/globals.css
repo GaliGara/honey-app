@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Tipografía */
+  --font-display: var(--font-playfair);
+  --font-sans: var(--font-inter);
+
+  /* Paleta Honey */
+  --color-cream: #EAE3D2;
+  --color-cream-light: #F4EFE3;
+  --color-honey-soft: #FFF7DF;
+  --color-gold: #D4AF37;
+  --color-honey: #E5A93B;
+  --color-amber: #B87514;
+  --color-brown: #2C1E11;
+  --color-muted-brown: #6F5635;
+}
+
+:root {
+  --background: #F4EFE3;
+  --foreground: #2C1E11;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Glassmorphism ─────────────────────────────────── */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 8px 32px rgba(184, 117, 20, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+/* ── Botón premium oro/ámbar ───────────────────────── */
+.premium-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #D4AF37 0%, #E5A93B 50%, #B87514 100%);
+  color: #2C1E11;
+  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 24px rgba(212, 175, 55, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.3) inset;
+}
+
+.premium-button:hover {
+  transform: scale(1.02);
+  box-shadow:
+    0 8px 32px rgba(212, 175, 55, 0.5),
+    0 1px 0 rgba(255, 255, 255, 0.3) inset;
+}
+
+.premium-button:active {
+  transform: scale(0.99);
+}
+
+/* ── Fondo radial cálido ───────────────────────────── */
+.warm-radial-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(212, 175, 55, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(229, 169, 59, 0.12) 0%, transparent 60%),
+    linear-gradient(160deg, #F4EFE3 0%, #EAE3D2 50%, #FFF7DF 100%);
+}
