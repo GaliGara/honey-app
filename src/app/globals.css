@@ -150,6 +150,73 @@ body {
   color: rgba(212, 175, 55, 0.7);
 }
 
+/* ── Animación jar float + micromotion ────────────── */
+@keyframes jar-float {
+  0%,  100% { transform: translateY(0px)    translateX(0px)    rotate(0.00deg); }
+  30%        { transform: translateY(-11px)  translateX(1.5px)  rotate(0.30deg); }
+  65%        { transform: translateY(-19px)  translateX(-1.2px) rotate(-0.25deg); }
+}
+.jar-float {
+  animation: jar-float 7s ease-in-out infinite;
+}
+
+@keyframes hex-drift {
+  0%,  100% { transform: translateY(0px) rotate(var(--hr,0deg)); }
+  50%        { transform: translateY(-7px) rotate(calc(var(--hr,0deg) + 3deg)); }
+}
+.hex-drift {
+  animation: hex-drift var(--hd, 9s) ease-in-out infinite;
+  animation-delay: var(--hdelay, 0s);
+}
+
+@keyframes drop-bob {
+  0%,  100% { transform: translateY(0px)    scale(1.000); }
+  30%        { transform: translateY(-5px)   scale(0.978); }
+  60%        { transform: translateY(-13px)  scale(0.942); }
+  80%        { transform: translateY(-9px)   scale(0.960); }
+}
+.drop-bob {
+  animation: drop-bob var(--db, 5s) ease-in-out infinite;
+  animation-delay: var(--dbdelay, 0s);
+}
+
+/* Lateral sway — runs on inner wrapper, composes with drop-bob */
+@keyframes drop-sway {
+  0%   { transform: translateX(0px)               scaleX(1.000); }
+  100% { transform: translateX(var(--ds, 1.4px))  scaleX(0.955); }
+}
+.drop-sway {
+  animation: drop-sway var(--dsd, 4s) ease-in-out infinite alternate;
+  animation-delay: var(--dsdelay, 0s);
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1.00); }
+  50%       { opacity: 0.80; transform: scale(1.06); }
+}
+.glow-pulse {
+  animation: glow-pulse 5s ease-in-out infinite;
+  animation-delay: var(--gpdelay, 0s);
+}
+
+/* Glass highlight shimmer — slow vertical drift + opacity breath */
+@keyframes glass-shimmer {
+  0%,  100% { opacity: 1;    transform: translateY(0%);   }
+  42%        { opacity: 0.68; transform: translateY(2.5%); }
+  74%        { opacity: 0.86; transform: translateY(1.2%); }
+}
+.glass-shimmer {
+  animation: glass-shimmer var(--gsd, 9s) ease-in-out infinite;
+  animation-delay: var(--gsdelay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jar-float, .hex-drift, .drop-bob, .drop-sway,
+  .float-animation, .glow-pulse, .glass-shimmer {
+    animation: none !important;
+  }
+}
+
 /* ── Separador dorado ──────────────────────────────── */
 .gold-divider {
   height: 1px;
