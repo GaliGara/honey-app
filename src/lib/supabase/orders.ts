@@ -29,6 +29,14 @@ export interface CreateOrderInput {
   shipping: number;
   taxes: number;
   total: number;
+  /** Procesador de pago. Por defecto 'mercado_pago'. */
+  paymentProvider?: string;
+  /**
+   * Estado inicial del pago.
+   * Por defecto 'pending_payment'.
+   * Valores: pending_payment | paid | payment_failed | cancelled | refunded
+   */
+  paymentStatus?: string;
 }
 
 export interface CreateOrderResult {
@@ -59,6 +67,8 @@ export async function createOrder(
       taxes: input.taxes,
       total: input.total,
       status: "pending",
+      payment_provider: input.paymentProvider ?? "mercado_pago",
+      payment_status: input.paymentStatus ?? "pending_payment",
     })
     .select("id, order_number")
     .single();

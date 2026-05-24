@@ -18,6 +18,20 @@ export type Database = {
           taxes: number;
           total: number;
           status: string;
+          /** Procesador de pago: 'mercado_pago' */
+          payment_provider: string | null;
+          /** Estado del pago: pending_payment | paid | payment_failed | cancelled | refunded */
+          payment_status: string;
+          /** ID de pago devuelto por Mercado Pago (payment_id) */
+          payment_reference: string | null;
+          /** ID de preferencia creada en Mercado Pago */
+          payment_preference_id: string | null;
+          /** URL de checkout de Mercado Pago */
+          payment_init_point: string | null;
+          /** Detalle adicional del estado (ej: accredited, pending_contingency) */
+          payment_status_detail: string | null;
+          paid_at: string | null;
+          cancelled_at: string | null;
           created_at: string;
         };
         Insert: {
@@ -36,6 +50,14 @@ export type Database = {
           taxes: number;
           total: number;
           status?: string;
+          payment_provider?: string | null;
+          payment_status?: string;
+          payment_reference?: string | null;
+          payment_preference_id?: string | null;
+          payment_init_point?: string | null;
+          payment_status_detail?: string | null;
+          paid_at?: string | null;
+          cancelled_at?: string | null;
           created_at?: string;
         };
         Update: Partial<{
@@ -53,6 +75,14 @@ export type Database = {
           taxes: number;
           total: number;
           status: string;
+          payment_provider: string | null;
+          payment_status: string;
+          payment_reference: string | null;
+          payment_preference_id: string | null;
+          payment_init_point: string | null;
+          payment_status_detail: string | null;
+          paid_at: string | null;
+          cancelled_at: string | null;
         }>;
         Relationships: [];
       };
