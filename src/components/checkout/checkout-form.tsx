@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect, type FormEvent, type ChangeEvent } from "react";
+import { useState, useEffect } from "react";
+import { useForm, type UseFormRegisterReturn } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/use-cart";
-import type {
-  CheckoutFormData,
-  CheckoutFormErrors,
-  OrderSummaryData,
-} from "@/types/order";
+import { checkoutSchema, type CheckoutSchema } from "@/lib/validations/order";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
+import { createOrder } from "@/lib/supabase/orders";
+import type { OrderSummaryData } from "@/types/order";
 import OrderSummary from "./order-summary";
 import CheckoutEmptyState from "./checkout-empty-state";
 
@@ -16,44 +17,15 @@ import CheckoutEmptyState from "./checkout-empty-state";
 const SHIPPING = 8;
 const TAXES = 0;
 
-const EMPTY_FORM: CheckoutFormData = {
-  fullName: "",
-  email: "",
-  phone: "",
-  address: "",
-  city: "",
-  state: "",
-  postalCode: "",
-  notes: "",
-};
-
-/* ── Validation ─────────────────────────────────────────────── */
-
-function validate(data: CheckoutFormData): CheckoutFormErrors {
-  const e: CheckoutFormErrors = {};
-  if (!data.fullName.trim()) e.fullName = "El nombre completo es requerido";
-  if (!data.email.trim()) {
-    e.email = "El email es requerido";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) {
-    e.email = "Introduce un email válido";
-  }
-  if (!data.phone.trim()) e.phone = "El teléfono es requerido";
-  if (!data.address.trim()) e.address = "La dirección es requerida";
-  if (!data.city.trim()) e.city = "La ciudad es requerida";
-  return e;
-}
-
 function generateOrderNumber(): string {
   return `HNY-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 }
 
-/* ── Sub-components ─────────────────────────────────────────── */
+/* ── Field sub-components ───────────────────────────────────── */
 
 interface InputFieldProps {
   label: string;
-  name: keyof CheckoutFormData;
-  value: string;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  registration: UseFormRegisterReturn;
   type?: string;
   required?: boolean;
   error?: string;
@@ -63,9 +35,7 @@ interface InputFieldProps {
 
 function InputField({
   label,
-  name,
-  value,
-  onChange,
+  registration,
   type = "text",
   required,
   error,
@@ -73,6 +43,7 @@ function InputField({
   className = "",
 }: InputFieldProps) {
   const [focused, setFocused] = useState(false);
+  const { onBlur: regOnBlur, ...restReg } = registration;
 
   const borderColor = error
     ? "rgba(200,70,50,0.55)"
@@ -83,7 +54,7 @@ function InputField({
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       <label
-        htmlFor={name}
+        htmlFor={registration.name}
         style={{
           color: "#6F5635",
           fontSize: "0.72rem",
@@ -98,14 +69,15 @@ function InputField({
         )}
       </label>
       <input
-        id={name}
-        name={name}
+        id={registration.name}
         type={type}
-        value={value}
-        onChange={onChange}
         placeholder={placeholder}
+        {...restReg}
         onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onBlur={(e) => {
+          setFocused(false);
+          regOnBlur(e);
+        }}
         style={{
           background: "rgba(255,255,255,0.72)",
           border: `1px solid ${borderColor}`,
@@ -136,19 +108,18 @@ function InputField({
 
 interface TextareaFieldProps {
   label: string;
-  name: keyof CheckoutFormData;
-  value: string;
-  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  registration: UseFormRegisterReturn;
   placeholder?: string;
 }
 
-function TextareaField({ label, name, value, onChange, placeholder }: TextareaFieldProps) {
+function TextareaField({ label, registration, placeholder }: TextareaFieldProps) {
   const [focused, setFocused] = useState(false);
+  const { onBlur: regOnBlur, ...restReg } = registration;
 
   return (
     <div className="flex flex-col gap-1.5">
       <label
-        htmlFor={name}
+        htmlFor={registration.name}
         style={{
           color: "#6F5635",
           fontSize: "0.72rem",
@@ -160,14 +131,15 @@ function TextareaField({ label, name, value, onChange, placeholder }: TextareaFi
         {label}
       </label>
       <textarea
-        id={name}
-        name={name}
-        value={value}
-        onChange={onChange}
+        id={registration.name}
         rows={3}
         placeholder={placeholder}
+        {...restReg}
         onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
+        onBlur={(e) => {
+          setFocused(false);
+          regOnBlur(e);
+        }}
         style={{
           background: "rgba(255,255,255,0.72)",
           border: `1px solid ${focused ? "#D4AF37" : "rgba(212,175,55,0.28)"}`,
@@ -187,12 +159,13 @@ function TextareaField({ label, name, value, onChange, placeholder }: TextareaFi
   );
 }
 
-interface FormSectionProps {
+function FormSection({
+  title,
+  children,
+}: {
   title: string;
   children: React.ReactNode;
-}
-
-function FormSection({ title, children }: FormSectionProps) {
+}) {
   return (
     <div className="glass-panel rounded-2xl p-6 flex flex-col gap-4 mb-4">
       <div>
@@ -231,13 +204,81 @@ function ArrowIcon() {
   );
 }
 
+function WarningIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      style={{ color: "#B87514", flexShrink: 0, marginTop: 1 }}
+    >
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+function ErrorIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      style={{ color: "rgba(200,70,50,0.85)", flexShrink: 0, marginTop: 1 }}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="15" y1="9" x2="9" y2="15" />
+      <line x1="9" y1="9" x2="15" y2="15" />
+    </svg>
+  );
+}
+
+/* ── Loading skeleton ───────────────────────────────────────── */
+
+function LoadingSkeleton() {
+  return (
+    <div className="grid lg:grid-cols-[1fr_400px] gap-8 animate-pulse">
+      <div className="flex flex-col gap-4">
+        {[200, 220, 120].map((h, i) => (
+          <div
+            key={i}
+            style={{
+              height: h,
+              borderRadius: 16,
+              background: "rgba(255,255,255,0.45)",
+            }}
+          />
+        ))}
+      </div>
+      <div
+        style={{
+          height: 380,
+          borderRadius: 16,
+          background: "rgba(255,255,255,0.45)",
+        }}
+      />
+    </div>
+  );
+}
+
 /* ── Main component ─────────────────────────────────────────── */
 
 export default function CheckoutForm() {
   const [mounted, setMounted] = useState(false);
-  const [formData, setFormData] = useState<CheckoutFormData>(EMPTY_FORM);
-  const [errors, setErrors] = useState<CheckoutFormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const items = useCartStore((s) => s.items);
   const clearCart = useCartStore((s) => s.clearCart);
@@ -245,89 +286,149 @@ export default function CheckoutForm() {
   const getSubtotal = useCartStore((s) => s.getSubtotal);
   const router = useRouter();
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<CheckoutSchema>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      notes: "",
+    },
+  });
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return (
-      <div className="grid lg:grid-cols-[1fr_400px] gap-8 animate-pulse">
-        <div className="flex flex-col gap-4">
-          {[1, 2, 3].map((n) => (
-            <div
-              key={n}
-              style={{
-                height: n === 3 ? 120 : 200,
-                borderRadius: 16,
-                background: "rgba(255,255,255,0.45)",
-              }}
-            />
-          ))}
-        </div>
-        <div
-          style={{
-            height: 380,
-            borderRadius: 16,
-            background: "rgba(255,255,255,0.45)",
-          }}
-        />
-      </div>
-    );
-  }
-
+  if (!mounted) return <LoadingSkeleton />;
   if (items.length === 0) return <CheckoutEmptyState />;
 
   const subtotal = getSubtotal();
   const total = subtotal + SHIPPING + TAXES;
+  const configured = isSupabaseConfigured();
 
-  function handleChange(
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errors[name as keyof CheckoutFormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  }
+  async function onSubmit(data: CheckoutSchema) {
+    setSubmitError(null);
 
-  function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
-    handleChange(e);
-  }
-
-  function handleTextareaChange(e: ChangeEvent<HTMLTextAreaElement>) {
-    handleChange(e);
-  }
-
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const validationErrors = validate(formData);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      const firstKey = Object.keys(validationErrors)[0];
-      const el = document.getElementById(firstKey);
-      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!configured) {
+      setSubmitError(
+        "Supabase no está configurado. Agrega NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local para habilitar el guardado de pedidos."
+      );
       return;
     }
 
-    setIsSubmitting(true);
-    const orderNumber = generateOrderNumber();
-    const orderData: OrderSummaryData = {
-      orderNumber,
-      customerName: formData.fullName,
-      customerEmail: formData.email,
-      total,
-      itemCount: items.reduce((s, i) => s + i.quantity, 0),
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const orderNumber = generateOrderNumber();
+      const currentSubtotal = getSubtotal();
+      const currentTotal = currentSubtotal + SHIPPING + TAXES;
 
-    sessionStorage.setItem("honey-last-order", JSON.stringify(orderData));
-    clearCart();
-    closeCart();
-    router.push(`/gracias?order=${orderNumber}`);
+      const { orderNumber: confirmedNumber } = await createOrder({
+        orderNumber,
+        customerName: data.fullName,
+        customerEmail: data.email,
+        customerPhone: data.phone,
+        address: data.address,
+        city: data.city,
+        state: data.state || undefined,
+        postalCode: data.postalCode || undefined,
+        notes: data.notes || undefined,
+        items,
+        subtotal: currentSubtotal,
+        shipping: SHIPPING,
+        taxes: TAXES,
+        total: currentTotal,
+      });
+
+      const orderSummary: OrderSummaryData = {
+        orderNumber: confirmedNumber,
+        customerName: data.fullName,
+        customerEmail: data.email,
+        total: currentTotal,
+        itemCount: items.reduce((s, i) => s + i.quantity, 0),
+        createdAt: new Date().toISOString(),
+      };
+
+      sessionStorage.setItem("honey-last-order", JSON.stringify(orderSummary));
+      clearCart();
+      closeCart();
+      router.push(`/gracias?order=${confirmedNumber}`);
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error
+          ? err.message
+          : "Ocurrió un error al procesar tu pedido. Por favor intenta nuevamente."
+      );
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+
+      {/* ── Supabase not configured warning ── */}
+      {!configured && (
+        <div
+          className="glass-panel rounded-xl px-5 py-4 mb-6 flex items-start gap-3"
+          style={{ borderColor: "rgba(184,117,20,0.4)" }}
+        >
+          <WarningIcon />
+          <div className="flex flex-col gap-1">
+            <p
+              style={{
+                color: "#B87514",
+                fontWeight: 600,
+                fontSize: "0.85rem",
+              }}
+            >
+              Supabase no está configurado
+            </p>
+            <p style={{ color: "#6F5635", fontSize: "0.8rem", lineHeight: 1.5 }}>
+              Agrega{" "}
+              <code
+                style={{
+                  background: "rgba(212,175,55,0.15)",
+                  borderRadius: 4,
+                  padding: "0 4px",
+                  fontSize: "0.75rem",
+                }}
+              >
+                NEXT_PUBLIC_SUPABASE_URL
+              </code>{" "}
+              y{" "}
+              <code
+                style={{
+                  background: "rgba(212,175,55,0.15)",
+                  borderRadius: 4,
+                  padding: "0 4px",
+                  fontSize: "0.75rem",
+                }}
+              >
+                NEXT_PUBLIC_SUPABASE_ANON_KEY
+              </code>{" "}
+              en{" "}
+              <code
+                style={{
+                  background: "rgba(212,175,55,0.15)",
+                  borderRadius: 4,
+                  padding: "0 4px",
+                  fontSize: "0.75rem",
+                }}
+              >
+                .env.local
+              </code>{" "}
+              para habilitar el guardado de pedidos.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-8 items-start">
 
         {/* ── Left: Form fields ── */}
@@ -335,29 +436,23 @@ export default function CheckoutForm() {
           <FormSection title="Información de contacto">
             <InputField
               label="Nombre completo"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleInputChange}
-              error={errors.fullName}
+              registration={register("fullName")}
+              error={errors.fullName?.message}
               required
             />
             <div className="grid sm:grid-cols-2 gap-4">
               <InputField
                 label="Email"
-                name="email"
+                registration={register("email")}
                 type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                error={errors.email}
+                error={errors.email?.message}
                 required
               />
               <InputField
                 label="Teléfono"
-                name="phone"
+                registration={register("phone")}
                 type="tel"
-                value={formData.phone}
-                onChange={handleInputChange}
-                error={errors.phone}
+                error={errors.phone?.message}
                 required
                 placeholder="+52 55 0000 0000"
               />
@@ -367,35 +462,27 @@ export default function CheckoutForm() {
           <FormSection title="Dirección de envío">
             <InputField
               label="Dirección"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              error={errors.address}
+              registration={register("address")}
+              error={errors.address?.message}
               required
               placeholder="Calle, número, colonia"
             />
             <div className="grid sm:grid-cols-3 gap-4">
               <InputField
                 label="Ciudad"
-                name="city"
-                value={formData.city}
-                onChange={handleInputChange}
-                error={errors.city}
+                registration={register("city")}
+                error={errors.city?.message}
                 required
                 className="sm:col-span-2"
               />
               <InputField
                 label="Estado"
-                name="state"
-                value={formData.state}
-                onChange={handleInputChange}
+                registration={register("state")}
               />
             </div>
             <InputField
               label="Código postal"
-              name="postalCode"
-              value={formData.postalCode}
-              onChange={handleInputChange}
+              registration={register("postalCode")}
               placeholder="00000"
               className="sm:max-w-[200px]"
             />
@@ -404,22 +491,37 @@ export default function CheckoutForm() {
           <FormSection title="Notas del pedido">
             <TextareaField
               label="Instrucciones especiales (opcional)"
-              name="notes"
-              value={formData.notes}
-              onChange={handleTextareaChange}
+              registration={register("notes")}
               placeholder="Referencias de entrega, horarios preferidos..."
             />
           </FormSection>
 
-          {/* Submit */}
+          {/* Submit error */}
+          {submitError && (
+            <div
+              className="glass-panel rounded-xl px-5 py-4 mb-4 flex items-start gap-3"
+              style={{ borderColor: "rgba(200,70,50,0.3)" }}
+            >
+              <ErrorIcon />
+              <p style={{ color: "rgba(200,70,50,0.9)", fontSize: "0.85rem", lineHeight: 1.5 }}>
+                {submitError}
+              </p>
+            </div>
+          )}
+
+          {/* Submit button */}
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !configured}
             className="premium-button w-full text-base flex items-center justify-center gap-2.5 mt-2"
-            style={isSubmitting ? { opacity: 0.65, cursor: "wait" } : {}}
+            style={
+              isSubmitting || !configured
+                ? { opacity: 0.55, cursor: "not-allowed" }
+                : {}
+            }
           >
             {isSubmitting ? (
-              "Procesando..."
+              "Guardando pedido..."
             ) : (
               <>
                 Confirmar pedido
