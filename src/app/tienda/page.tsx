@@ -7,10 +7,10 @@ import { PRODUCTS } from "@/constants/products";
 function StoreHero() {
   return (
     <div
-      className="relative pt-36 pb-14 px-6 text-center overflow-hidden"
+      className="relative pt-36 pb-16 px-6 text-center overflow-hidden"
       style={{ background: "#EAE3D2" }}
     >
-      {/* Ambient light */}
+      {/* Broad warm ambient light */}
       <div
         aria-hidden
         style={{
@@ -18,42 +18,68 @@ function StoreHero() {
           top: 0,
           left: "50%",
           transform: "translateX(-50%)",
-          width: "60%",
-          height: "80%",
-          background: "radial-gradient(ellipse at top, rgba(212,175,55,0.14) 0%, transparent 65%)",
+          width: "80%",
+          height: "100%",
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,175,55,0.18) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
 
-      {/* Decorative hex */}
+      {/* Hex decor — upper right, drifting */}
       <div
         aria-hidden
-        className="hex-shape absolute pointer-events-none"
+        className="hex-shape hex-drift absolute pointer-events-none"
         style={{
-          width: 200,
-          height: 200,
-          right: "5%",
-          top: "10%",
-          background: "rgba(212,175,55,0.06)",
-          transform: "rotate(10deg)",
+          width: 220,
+          height: 220,
+          right: "3%",
+          top: "8%",
+          background:
+            "linear-gradient(135deg, rgba(212,175,55,0.10) 0%, rgba(184,117,20,0.04) 100%)",
+          ["--hr" as string]: "10deg",
+          ["--hd" as string]: "14s",
+          ["--hdelay" as string]: "0s",
         }}
       />
+      {/* Hex decor — lower left, drifting */}
       <div
         aria-hidden
-        className="hex-shape absolute pointer-events-none"
+        className="hex-shape hex-drift absolute pointer-events-none"
         style={{
-          width: 120,
-          height: 120,
-          left: "8%",
-          bottom: "5%",
-          background: "rgba(184,117,20,0.07)",
-          transform: "rotate(-5deg)",
+          width: 130,
+          height: 130,
+          left: "5%",
+          bottom: "0%",
+          background:
+            "linear-gradient(135deg, rgba(184,117,20,0.09) 0%, rgba(212,175,55,0.04) 100%)",
+          ["--hr" as string]: "-6deg",
+          ["--hd" as string]: "11s",
+          ["--hdelay" as string]: "-4s",
+        }}
+      />
+      {/* Hex decor — upper left, small */}
+      <div
+        aria-hidden
+        className="hex-shape hex-drift absolute pointer-events-none"
+        style={{
+          width: 72,
+          height: 72,
+          left: "16%",
+          top: "18%",
+          background: "rgba(212,175,55,0.08)",
+          ["--hr" as string]: "22deg",
+          ["--hd" as string]: "9s",
+          ["--hdelay" as string]: "-2s",
         }}
       />
 
       <div className="relative">
         {/* Breadcrumb */}
-        <nav className="flex items-center justify-center gap-2 mb-6 text-[10px] uppercase tracking-[0.3em]" aria-label="Breadcrumb">
+        <nav
+          className="flex items-center justify-center gap-2 mb-6 text-[10px] uppercase tracking-[0.32em]"
+          aria-label="Breadcrumb"
+        >
           <a href="/" style={{ color: "rgba(111,86,53,0.6)" }}>
             Inicio
           </a>
@@ -62,23 +88,27 @@ function StoreHero() {
         </nav>
 
         {/* Eyebrow */}
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <div className="gold-divider w-10" />
-          <span className="text-[10px] uppercase tracking-[0.42em]" style={{ color: "#B87514" }}>
+        <div className="flex items-center justify-center gap-4 mb-5">
+          <div className="gold-divider w-12" />
+          <span
+            className="text-[10px] uppercase tracking-[0.44em]"
+            style={{ color: "#B87514" }}
+          >
             Nuestra colección
           </span>
-          <div className="gold-divider w-10" />
+          <div className="gold-divider w-12" />
         </div>
 
         {/* Title */}
         <h1
-          className="text-4xl md:text-5xl font-bold mb-4"
+          className="text-4xl md:text-5xl xl:text-6xl font-bold mb-5"
           style={{ fontFamily: "var(--font-playfair)", color: "#2C1E11" }}
         >
           La{" "}
           <span
             style={{
-              background: "linear-gradient(135deg, #D4AF37 0%, #E5A93B 55%, #B87514 100%)",
+              background:
+                "linear-gradient(135deg, #D4AF37 0%, #E5A93B 55%, #B87514 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -89,8 +119,12 @@ function StoreHero() {
         </h1>
 
         {/* Subtitle */}
-        <p className="text-sm leading-relaxed max-w-md mx-auto" style={{ color: "#6F5635" }}>
-          Mieles de origen, productos de la colmena y accesorios seleccionados con un criterio claro: pureza, sabor y carácter.
+        <p
+          className="text-sm md:text-base leading-relaxed max-w-lg mx-auto"
+          style={{ color: "#6F5635" }}
+        >
+          Mieles de origen, productos de la colmena y accesorios seleccionados
+          con un criterio claro: pureza, sabor y carácter.
         </p>
       </div>
     </div>

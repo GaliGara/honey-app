@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { siteConfig } from "@/constants/site";
 import CartButton from "@/components/cart/cart-button";
 import CartDrawer from "@/components/cart/cart-drawer";
 
 const NAV_LINKS = [
-  { label: "Inicio",  href: "/" },
-  { label: "Tienda",  href: "/tienda" },
+  { label: "Inicio",   href: "/"        },
+  { label: "Tienda",   href: "/tienda"  },
+  { label: "Proceso",  href: "/#proceso" },
 ] as const;
 
 function SearchIcon() {
@@ -47,8 +49,16 @@ function HamburgerIcon({ open }: { open: boolean }) {
   );
 }
 
+/** Pure helper — anchor links are never highlighted as "active". */
+function isActive(pathname: string, href: string): boolean {
+  if (href.includes("#")) return false;
+  if (href === "/") return pathname === "/";
+  return pathname.startsWith(href);
+}
+
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <>
@@ -75,7 +85,12 @@ export default function Navbar() {
             {/* Desktop nav links */}
             <div className="hidden md:flex items-center gap-7">
               {NAV_LINKS.map(({ label, href }) => (
-                <a key={label} href={href} className="nav-link">
+                <a
+                  key={label}
+                  href={href}
+                  className="nav-link"
+                  aria-current={isActive(pathname, href) ? "page" : undefined}
+                >
                   {label}
                 </a>
               ))}
@@ -118,17 +133,21 @@ export default function Navbar() {
           {/* Mobile dropdown */}
           {menuOpen && (
             <div className="md:hidden mt-4 pt-4 flex flex-col gap-1" style={{ borderTop: "1px solid rgba(255,255,255,0.35)" }}>
-              {NAV_LINKS.map(({ label, href }) => (
-                <a
-                  key={label}
-                  href={href}
-                  className="py-2.5 text-sm tracking-wide"
-                  style={{ color: "#6F5635" }}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {label}
-                </a>
-              ))}
+              {NAV_LINKS.map(({ label, href }) => {
+                const active = isActive(pathname, href);
+                return (
+                  <a
+                    key={label}
+                    href={href}
+                    className="py-2.5 text-sm tracking-wide transition-colors duration-200"
+                    style={{ color: active ? "#D4AF37" : "#6F5635" }}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {label}
+                  </a>
+                );
+              })}
             </div>
           )}
         </nav>

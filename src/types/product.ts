@@ -7,6 +7,10 @@ export type ProductCategory =
 
 export type ProductVisual = "jar" | "dropper" | "pot" | "giftbox" | "dipper";
 
+/** Controls whether the card shows the CSS 2.5D visual or a real photo.
+ *  Defaults to "css" when absent. */
+export type ProductVisualMode = "css" | "image";
+
 export type ProductColorScheme =
   | "amber"
   | "pale"
@@ -43,4 +47,16 @@ export interface Product {
   isNew?: boolean;
   isBestSeller?: boolean;
   featured?: boolean;
+  /* ── Future image support ──────────────────────────────────
+   * When real product photos are ready:
+   *   1. Place image at   public/products/<slug>.webp
+   *   2. Set  imageUrl:   "/products/<slug>.webp"
+   *   3. Set  imageAlt:   "descriptive alt text"
+   *   4. Set  visualMode: "image"
+   * ProductCard will switch to photo mode while keeping the
+   * premium stage, glow, pedestal and float animation.
+   * ─────────────────────────────────────────────────────── */
+  imageUrl?: string;
+  imageAlt?: string;
+  visualMode?: ProductVisualMode;
 }

@@ -120,11 +120,13 @@ body {
   transition: transform 300ms ease;
 }
 
-.nav-link:hover {
+.nav-link:hover,
+.nav-link[aria-current="page"] {
   color: #D4AF37;
 }
 
-.nav-link:hover::after {
+.nav-link:hover::after,
+.nav-link[aria-current="page"]::after {
   transform: scaleX(1);
 }
 
@@ -210,9 +212,30 @@ body {
   animation-delay: var(--gsdelay, 0s);
 }
 
+/* ── Product visual float (inside cards) ──────────────── */
+@keyframes product-float {
+  0%,  100% { transform: translateY(0px); }
+  50%        { transform: translateY(-4px); }
+}
+.product-float {
+  animation: product-float var(--pf-dur, 6s) ease-in-out infinite;
+  animation-delay: var(--pf-delay, 0s);
+}
+
+/* ── Card staggered entrance ──────────────────────────── */
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.card-rise {
+  animation: card-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--card-delay, 0s);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .jar-float, .hex-drift, .drop-bob, .drop-sway,
-  .float-animation, .glow-pulse, .glass-shimmer {
+  .float-animation, .glow-pulse, .glass-shimmer,
+  .product-float, .card-rise {
     animation: none !important;
   }
 }

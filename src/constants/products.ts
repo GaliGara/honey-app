@@ -1,5 +1,16 @@
 import type { Product } from "@/types/product";
 
+/* ── To enable real product photos in the future: ────────────────────────
+ *  1. Place images in public/products/<slug>.webp  (recommended: 400×400)
+ *  2. Add to the product entry:
+ *       imageUrl:   "/products/<slug>.webp",
+ *       imageAlt:   "Descriptive alt text",
+ *       visualMode: "image",
+ *  3. The card automatically switches to photo mode while keeping the
+ *     premium stage, ambient glow, pedestal and float animation.
+ *  4. Remove  visual  and  colorScheme  only if you no longer need the
+ *     CSS fallback — keeping them is safe and harmless.
+ * ─────────────────────────────────────────────────────────────────────── */
 export const PRODUCTS: Product[] = [
   {
     id: "1",
