@@ -1,20 +1,38 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 interface CartSummaryProps {
   subtotal: number;
   onClose: () => void;
 }
 
-function LockIcon() {
+function ArrowIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M5 12h14M12 5l7 7-7 7" />
     </svg>
   );
 }
 
 export default function CartSummary({ subtotal, onClose }: CartSummaryProps) {
+  const router = useRouter();
+
+  const handleCheckout = () => {
+    onClose();
+    router.push("/checkout");
+  };
+
   return (
     <div className="flex flex-col gap-4">
 
@@ -57,17 +75,12 @@ export default function CartSummary({ subtotal, onClose }: CartSummaryProps) {
 
       {/* CTAs */}
       <div className="flex flex-col gap-3 mt-1">
-
-        {/* Checkout — deshabilitado hasta Fase 5 */}
         <button
-          disabled
+          onClick={handleCheckout}
           className="premium-button w-full text-sm flex items-center justify-center gap-2"
-          style={{ opacity: 0.55, cursor: "not-allowed" }}
-          title="Checkout disponible próximamente"
-          aria-disabled="true"
         >
-          <LockIcon />
           Continuar al checkout
+          <ArrowIcon />
         </button>
 
         <button
