@@ -123,6 +123,9 @@ function PaymentMethodCard({ option, selected, onSelect }: PaymentMethodCardProp
         border: `1.5px solid ${borderColor}`,
         background: bg,
         outline: "none",
+        boxShadow: selected
+          ? "0 0 0 3px rgba(212,175,55,0.12), 0 4px 20px rgba(184,117,20,0.10)"
+          : "none",
       }}
     >
       {/* Icon square */}
@@ -344,24 +347,42 @@ function TextareaField({ label, registration, placeholder }: TextareaFieldProps)
 
 function FormSection({
   title,
+  step,
   children,
 }: {
   title: string;
+  step?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="glass-panel rounded-2xl p-6 flex flex-col gap-4 mb-4">
       <div>
-        <h3
-          style={{
-            fontFamily: "var(--font-playfair)",
-            color: "#2C1E11",
-            fontSize: "1.05rem",
-            fontWeight: 600,
-          }}
-        >
-          {title}
-        </h3>
+        <div className="flex items-baseline gap-2.5">
+          {step && (
+            <span
+              style={{
+                fontFamily: "var(--font-playfair)",
+                fontSize: "1.2rem",
+                fontWeight: 700,
+                color: "rgba(212,175,55,0.28)",
+                lineHeight: 1,
+                flexShrink: 0,
+              }}
+            >
+              {step}
+            </span>
+          )}
+          <h3
+            style={{
+              fontFamily: "var(--font-playfair)",
+              color: "#2C1E11",
+              fontSize: "1.05rem",
+              fontWeight: 600,
+            }}
+          >
+            {title}
+          </h3>
+        </div>
         <div className="gold-divider mt-2" style={{ maxWidth: 100 }} />
       </div>
       {children}
@@ -553,7 +574,7 @@ export default function CheckoutForm() {
         {/* ── Left: Form fields ── */}
         <div className="w-full min-w-0">
           {/* Información de contacto */}
-          <FormSection title="Información de contacto">
+          <FormSection title="Información de contacto" step="01">
             <InputField
               label="Nombre completo"
               registration={register("fullName")}
@@ -580,7 +601,7 @@ export default function CheckoutForm() {
           </FormSection>
 
           {/* Dirección de envío */}
-          <FormSection title="Dirección de envío">
+          <FormSection title="Dirección de envío" step="02">
             <InputField
               label="Dirección"
               registration={register("address")}
@@ -610,7 +631,7 @@ export default function CheckoutForm() {
           </FormSection>
 
           {/* Método de pago */}
-          <FormSection title="Método de pago">
+          <FormSection title="Método de pago" step="03">
             {errors.paymentMethod && (
               <p style={{ color: "rgba(200,70,50,0.85)", fontSize: "0.7rem" }}>
                 {errors.paymentMethod.message}
@@ -635,7 +656,7 @@ export default function CheckoutForm() {
           </FormSection>
 
           {/* Notas del pedido */}
-          <FormSection title="Notas del pedido">
+          <FormSection title="Notas del pedido" step="04">
             <TextareaField
               label="Instrucciones especiales (opcional)"
               registration={register("notes")}
@@ -683,7 +704,7 @@ export default function CheckoutForm() {
             className="text-[9px] text-center uppercase tracking-[0.22em] mt-5"
             style={{ color: "rgba(111,86,53,0.4)" }}
           >
-            Pago seguro · Devolución 30 días · Envío premium
+            Pago seguro · Sin comisión de pasarela · Envío cuidado
           </p>
         </div>
 

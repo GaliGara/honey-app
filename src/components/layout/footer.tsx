@@ -4,7 +4,7 @@ const FOOTER_LINKS = [
   { label: "Inicio",     href: "/" },
   { label: "Tienda",     href: "/tienda" },
   { label: "Cuenta",     href: "/cuenta" },
-  { label: "Contacto",   href: "#" },
+  { label: "Proceso",    href: "/#proceso" },
 ] as const;
 
 const LEGAL_LINKS = [
