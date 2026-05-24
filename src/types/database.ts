@@ -32,6 +32,14 @@ export type Database = {
           payment_status_detail: string | null;
           paid_at: string | null;
           cancelled_at: string | null;
+          /** Método elegido por el cliente: bank_transfer | bank_deposit | cash_on_delivery | mercado_pago */
+          payment_method: string | null;
+          /** Instrucciones de pago generadas por el servidor */
+          payment_instructions: string | null;
+          /** URL del comprobante de pago subido por el cliente (uso futuro) */
+          payment_proof_url: string | null;
+          /** Referencia manual = order_number para métodos no-pasarela */
+          manual_payment_reference: string | null;
           created_at: string;
         };
         Insert: {
@@ -58,6 +66,10 @@ export type Database = {
           payment_status_detail?: string | null;
           paid_at?: string | null;
           cancelled_at?: string | null;
+          payment_method?: string | null;
+          payment_instructions?: string | null;
+          payment_proof_url?: string | null;
+          manual_payment_reference?: string | null;
           created_at?: string;
         };
         Update: Partial<{
@@ -83,6 +95,10 @@ export type Database = {
           payment_status_detail: string | null;
           paid_at: string | null;
           cancelled_at: string | null;
+          payment_method: string | null;
+          payment_instructions: string | null;
+          payment_proof_url: string | null;
+          manual_payment_reference: string | null;
         }>;
         Relationships: [];
       };

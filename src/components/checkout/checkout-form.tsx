@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/use-cart";
 import { checkoutSchema, type CheckoutSchema } from "@/lib/validations/order";
-import type { OrderSummaryData } from "@/types/order";
+import type { OrderSummaryData, PaymentMethod, PaymentStatus } from "@/types/order";
 import OrderSummary from "./order-summary";
 import CheckoutEmptyState from "./checkout-empty-state";
 
@@ -21,7 +21,203 @@ interface OrderApiResponse {
   ok: boolean;
   orderId?: string;
   orderNumber?: string;
+  paymentMethod?: PaymentMethod;
+  paymentStatus?: PaymentStatus;
   message?: string;
+}
+
+/* ── Payment method options ─────────────────────────────────── */
+
+interface PaymentOption {
+  id: PaymentMethod;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  badge?: string;
+}
+
+function TransferIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M7 16V4m0 0L3 8m4-4l4 4" />
+      <path d="M17 8v12m0 0l4-4m-4 4l-4-4" />
+    </svg>
+  );
+}
+
+function BankIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+      <polyline points="9 22 9 12 15 12 15 22" />
+    </svg>
+  );
+}
+
+function TruckIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="1" y="3" width="15" height="13" rx="2" />
+      <path d="M16 8h4l3 5v3h-7V8z" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
+    </svg>
+  );
+}
+
+function CardIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="1" y="4" width="22" height="16" rx="2" />
+      <line x1="1" y1="10" x2="23" y2="10" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M20 6L9 17l-5-5" />
+    </svg>
+  );
+}
+
+const PAYMENT_OPTIONS: PaymentOption[] = [
+  {
+    id: "bank_transfer",
+    label: "Transferencia SPEI",
+    description:
+      "Sin comisión de pasarela. Recibirás los datos bancarios al confirmar tu pedido.",
+    icon: <TransferIcon />,
+    badge: "Sin comisión",
+  },
+  {
+    id: "bank_deposit",
+    label: "Depósito bancario",
+    description:
+      "Realiza tu depósito y comparte el comprobante para confirmar.",
+    icon: <BankIcon />,
+  },
+  {
+    id: "cash_on_delivery",
+    label: "Pago contra entrega",
+    description: "Disponible solo en zonas seleccionadas.",
+    icon: <TruckIcon />,
+  },
+  {
+    id: "mercado_pago",
+    label: "Mercado Pago",
+    description:
+      "Paga con tarjeta o medios disponibles en Mercado Pago. Puede aplicar comisión de procesamiento.",
+    icon: <CardIcon />,
+  },
+];
+
+/* ── PaymentMethodCard sub-component ───────────────────────── */
+
+interface PaymentMethodCardProps {
+  option: PaymentOption;
+  selected: boolean;
+  onSelect: () => void;
+}
+
+function PaymentMethodCard({ option, selected, onSelect }: PaymentMethodCardProps) {
+  const borderColor = selected ? "#D4AF37" : "rgba(212,175,55,0.22)";
+  const bg = selected
+    ? "rgba(212,175,55,0.07)"
+    : "rgba(255,255,255,0.55)";
+
+  return (
+    <div
+      role="radio"
+      aria-checked={selected}
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(); } }}
+      className="flex items-start gap-4 rounded-xl px-4 py-3.5 cursor-pointer transition-all duration-200"
+      style={{
+        border: `1.5px solid ${borderColor}`,
+        background: bg,
+        outline: "none",
+      }}
+    >
+      {/* Icon square */}
+      <div
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 10,
+          background: selected
+            ? "rgba(212,175,55,0.18)"
+            : "rgba(212,175,55,0.08)",
+          border: `1px solid ${selected ? "rgba(212,175,55,0.4)" : "rgba(212,175,55,0.15)"}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: selected ? "#B87514" : "rgba(111,86,53,0.5)",
+          flexShrink: 0,
+          transition: "all 0.2s",
+        }}
+      >
+        {option.icon}
+      </div>
+
+      {/* Text */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className="text-sm font-semibold"
+            style={{
+              fontFamily: "var(--font-playfair)",
+              color: selected ? "#2C1E11" : "#6F5635",
+            }}
+          >
+            {option.label}
+          </span>
+          {option.badge && (
+            <span
+              className="text-[8px] uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-full"
+              style={{
+                background: "rgba(212,175,55,0.15)",
+                color: "#B87514",
+                border: "1px solid rgba(212,175,55,0.25)",
+              }}
+            >
+              {option.badge}
+            </span>
+          )}
+        </div>
+        <p
+          className="text-xs mt-0.5 leading-relaxed"
+          style={{ color: "rgba(111,86,53,0.7)" }}
+        >
+          {option.description}
+        </p>
+      </div>
+
+      {/* Check indicator */}
+      <div
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: "50%",
+          border: `2px solid ${selected ? "#D4AF37" : "rgba(212,175,55,0.3)"}`,
+          background: selected
+            ? "linear-gradient(135deg, #D4AF37, #B87514)"
+            : "transparent",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          marginTop: 2,
+          transition: "all 0.2s",
+          color: "white",
+        }}
+      >
+        {selected && <CheckIcon />}
+      </div>
+    </div>
+  );
 }
 
 /* ── Field sub-components ───────────────────────────────────── */
@@ -232,7 +428,7 @@ function LoadingSkeleton() {
   return (
     <div className="grid lg:grid-cols-[1fr_400px] gap-8 animate-pulse">
       <div className="flex flex-col gap-4">
-        {[200, 220, 120].map((h, i) => (
+        {[200, 220, 260, 120].map((h, i) => (
           <div
             key={i}
             style={{
@@ -270,6 +466,8 @@ export default function CheckoutForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    setValue,
+    watch,
   } = useForm<CheckoutSchema>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -281,8 +479,11 @@ export default function CheckoutForm() {
       state: "",
       postalCode: "",
       notes: "",
+      paymentMethod: "bank_transfer",
     },
   });
+
+  const selectedPayment = watch("paymentMethod");
 
   useEffect(() => {
     setMounted(true);
@@ -310,6 +511,7 @@ export default function CheckoutForm() {
           state: data.state || undefined,
           postalCode: data.postalCode || undefined,
           notes: data.notes || undefined,
+          paymentMethod: data.paymentMethod,
           items: items.map((item) => ({
             productId: item.productId,
             slug: item.slug,
@@ -343,6 +545,8 @@ export default function CheckoutForm() {
         total: currentTotal,
         itemCount: items.reduce((s, i) => s + i.quantity, 0),
         createdAt: new Date().toISOString(),
+        paymentMethod: result.paymentMethod ?? data.paymentMethod,
+        paymentStatus: result.paymentStatus ?? "pending_payment",
       };
 
       sessionStorage.setItem("honey-last-order", JSON.stringify(orderSummary));
@@ -358,12 +562,18 @@ export default function CheckoutForm() {
     }
   }
 
+  const submitLabel =
+    selectedPayment === "mercado_pago"
+      ? "Confirmar y continuar"
+      : "Confirmar pedido";
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
       <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-8 items-start">
 
         {/* ── Left: Form fields ── */}
         <div>
+          {/* Información de contacto */}
           <FormSection title="Información de contacto">
             <InputField
               label="Nombre completo"
@@ -390,6 +600,7 @@ export default function CheckoutForm() {
             </div>
           </FormSection>
 
+          {/* Dirección de envío */}
           <FormSection title="Dirección de envío">
             <InputField
               label="Dirección"
@@ -419,6 +630,32 @@ export default function CheckoutForm() {
             />
           </FormSection>
 
+          {/* Método de pago */}
+          <FormSection title="Método de pago">
+            {errors.paymentMethod && (
+              <p style={{ color: "rgba(200,70,50,0.85)", fontSize: "0.7rem" }}>
+                {errors.paymentMethod.message}
+              </p>
+            )}
+            <div
+              className="flex flex-col gap-2.5"
+              role="radiogroup"
+              aria-label="Método de pago"
+            >
+              {PAYMENT_OPTIONS.map((opt) => (
+                <PaymentMethodCard
+                  key={opt.id}
+                  option={opt}
+                  selected={selectedPayment === opt.id}
+                  onSelect={() =>
+                    setValue("paymentMethod", opt.id, { shouldValidate: true })
+                  }
+                />
+              ))}
+            </div>
+          </FormSection>
+
+          {/* Notas del pedido */}
           <FormSection title="Notas del pedido">
             <TextareaField
               label="Instrucciones especiales (opcional)"
@@ -457,7 +694,7 @@ export default function CheckoutForm() {
               "Guardando pedido..."
             ) : (
               <>
-                Confirmar pedido
+                {submitLabel}
                 <ArrowIcon />
               </>
             )}

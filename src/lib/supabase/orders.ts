@@ -29,14 +29,24 @@ export interface CreateOrderInput {
   shipping: number;
   taxes: number;
   total: number;
-  /** Procesador de pago. Por defecto 'mercado_pago'. */
+  /** Procesador de pago: 'mercado_pago' | 'manual'. Por defecto 'mercado_pago'. */
   paymentProvider?: string;
   /**
    * Estado inicial del pago.
    * Por defecto 'pending_payment'.
-   * Valores: pending_payment | paid | payment_failed | cancelled | refunded
+   * Valores: pending_transfer | pending_deposit | pending_cash_payment |
+   *          pending_payment | paid | payment_failed | cancelled | refunded
    */
   paymentStatus?: string;
+  /**
+   * Método elegido por el cliente.
+   * Valores: bank_transfer | bank_deposit | cash_on_delivery | mercado_pago
+   */
+  paymentMethod?: string;
+  /** Instrucciones de pago generadas en el servidor. */
+  paymentInstructions?: string;
+  /** Referencia manual (= orderNumber para métodos no-pasarela). */
+  manualPaymentReference?: string;
 }
 
 export interface CreateOrderResult {
@@ -69,6 +79,9 @@ export async function createOrder(
       status: "pending",
       payment_provider: input.paymentProvider ?? "mercado_pago",
       payment_status: input.paymentStatus ?? "pending_payment",
+      payment_method: input.paymentMethod ?? null,
+      payment_instructions: input.paymentInstructions ?? null,
+      manual_payment_reference: input.manualPaymentReference ?? null,
     })
     .select("id, order_number")
     .single();

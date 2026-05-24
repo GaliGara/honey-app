@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const PAYMENT_METHOD_VALUES = [
+  "bank_transfer",
+  "bank_deposit",
+  "cash_on_delivery",
+  "mercado_pago",
+] as const;
+
 export const checkoutSchema = z.object({
   fullName: z.string().min(1, "El nombre completo es requerido"),
   email: z
@@ -12,6 +19,10 @@ export const checkoutSchema = z.object({
   state: z.string().optional(),
   postalCode: z.string().optional(),
   notes: z.string().optional(),
+  paymentMethod: z.enum(
+    ["bank_transfer", "bank_deposit", "cash_on_delivery", "mercado_pago"],
+    { message: "Selecciona un método de pago" }
+  ),
 });
 
 export type CheckoutSchema = z.infer<typeof checkoutSchema>;

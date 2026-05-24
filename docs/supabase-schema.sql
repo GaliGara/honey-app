@@ -1,12 +1,12 @@
 -- ============================================================
 -- Honey Shop — Supabase Schema
--- Fase 8: Preparación de columnas de pago (Mercado Pago)
+-- Fase 8.1: Métodos de pago manuales + Mercado Pago (prep)
 --
 -- Instrucciones:
 -- 1. Abre tu proyecto en https://supabase.com
 -- 2. Ve a SQL Editor
--- 3. Si es una base de datos nueva → ejecuta la sección CREATE TABLE
--- 4. Si ya tienes las tablas de Fase 6/6.1 → ejecuta la sección MIGRACIÓN
+-- 3. Si es una base de datos nueva → ejecuta TODO desde CREATE TABLE
+-- 4. Si ya tienes las tablas → ejecuta SOLO el bloque MIGRACIÓN
 -- ============================================================
 
 
@@ -39,6 +39,12 @@ CREATE TABLE IF NOT EXISTS orders (
   paid_at               timestamptz,
   cancelled_at          timestamptz,
 
+  -- ── Método manual (Fase 8.1) ───────────────────────────
+  payment_method            text,
+  payment_instructions      text,
+  payment_proof_url         text,
+  manual_payment_reference  text,
+
   created_at    timestamptz DEFAULT now()
 );
 
@@ -46,9 +52,12 @@ COMMENT ON TABLE orders IS 'Pedidos del e-commerce Honey Shop';
 COMMENT ON COLUMN orders.status IS
   'Estado logístico: pending | confirmed | shipped | delivered | cancelled';
 COMMENT ON COLUMN orders.payment_provider IS
-  'Procesador de pago: mercado_pago (único por ahora)';
+  'Procesador de pago: mercado_pago | manual';
 COMMENT ON COLUMN orders.payment_status IS
-  'Estado del pago: pending_payment | paid | payment_failed | cancelled | refunded';
+  'Estado del pago: pending_transfer | pending_deposit | pending_cash_payment |'
+  ' pending_payment | paid | payment_failed | cancelled | refunded';
+COMMENT ON COLUMN orders.payment_method IS
+  'Método elegido: bank_transfer | bank_deposit | cash_on_delivery | mercado_pago';
 COMMENT ON COLUMN orders.payment_reference IS
   'ID de pago devuelto por Mercado Pago (payment_id)';
 COMMENT ON COLUMN orders.payment_preference_id IS
@@ -57,6 +66,12 @@ COMMENT ON COLUMN orders.payment_init_point IS
   'URL de checkout generada por Mercado Pago';
 COMMENT ON COLUMN orders.payment_status_detail IS
   'Detalle adicional del estado (ej: accredited, pending_contingency)';
+COMMENT ON COLUMN orders.payment_instructions IS
+  'Instrucciones de pago generadas por el servidor (datos bancarios, etc.)';
+COMMENT ON COLUMN orders.payment_proof_url IS
+  'URL del comprobante de pago subido por el cliente (uso futuro)';
+COMMENT ON COLUMN orders.manual_payment_reference IS
+  'Referencia manual = order_number para métodos no-pasarela';
 
 
 -- ── Tabla: order_items ─────────────────────────────────────
@@ -83,16 +98,16 @@ COMMENT ON TABLE order_items IS 'Líneas de cada pedido';
 CREATE INDEX IF NOT EXISTS orders_order_number_idx          ON orders(order_number);
 CREATE INDEX IF NOT EXISTS orders_customer_email_idx        ON orders(customer_email);
 CREATE INDEX IF NOT EXISTS orders_payment_status_idx        ON orders(payment_status);
+CREATE INDEX IF NOT EXISTS orders_payment_method_idx        ON orders(payment_method);
 CREATE INDEX IF NOT EXISTS orders_payment_preference_id_idx ON orders(payment_preference_id);
 CREATE INDEX IF NOT EXISTS order_items_order_id_idx         ON order_items(order_id);
 
 
 -- ── Row Level Security ──────────────────────────────────────
--- A partir de Fase 6.1, los inserts se hacen desde la API Route del servidor
--- usando service_role, que bypasea RLS automáticamente.
---
--- Con esta arquitectura NO se necesitan policies INSERT para anon.
--- Se mantiene RLS habilitado para proteger contra acceso directo.
+-- Los inserts se hacen desde la API Route del servidor usando service_role,
+-- que bypasea RLS automáticamente.
+-- NO se necesitan policies INSERT para anon.
+-- RLS habilitado para proteger contra acceso directo.
 
 ALTER TABLE orders      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
@@ -103,10 +118,11 @@ ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
 
 -- ============================================================
--- MIGRACIÓN — Solo para bases de datos existentes (Fase 6 / 6.1)
--- Si ya tienes las tablas creadas, ejecuta SOLO este bloque.
+-- MIGRACIÓN — Solo para bases de datos existentes (Fase 6 / 6.1 / 8)
+-- Ejecuta SOLO este bloque si ya tienes las tablas creadas.
 -- ============================================================
 
+-- Columnas de Fase 8 (Mercado Pago prep):
 ALTER TABLE orders
   ADD COLUMN IF NOT EXISTS payment_provider      text DEFAULT 'mercado_pago',
   ADD COLUMN IF NOT EXISTS payment_status        text NOT NULL DEFAULT 'pending_payment',
@@ -117,19 +133,27 @@ ALTER TABLE orders
   ADD COLUMN IF NOT EXISTS paid_at               timestamptz,
   ADD COLUMN IF NOT EXISTS cancelled_at          timestamptz;
 
+-- Columnas de Fase 8.1 (métodos manuales):
+ALTER TABLE orders
+  ADD COLUMN IF NOT EXISTS payment_method           text,
+  ADD COLUMN IF NOT EXISTS payment_instructions     text,
+  ADD COLUMN IF NOT EXISTS payment_proof_url        text,
+  ADD COLUMN IF NOT EXISTS manual_payment_reference text;
+
+-- Índices nuevos:
 CREATE INDEX IF NOT EXISTS orders_payment_status_idx
   ON orders(payment_status);
+
+CREATE INDEX IF NOT EXISTS orders_payment_method_idx
+  ON orders(payment_method);
 
 CREATE INDEX IF NOT EXISTS orders_payment_preference_id_idx
   ON orders(payment_preference_id);
 
 
 -- ============================================================
--- LIMPIEZA (solo si ya ejecutaste el schema anterior de Fase 6)
+-- LIMPIEZA (solo si ejecutaste el schema de Fase 6 con anon policies)
 -- ============================================================
--- Si ejecutaste el script de Fase 6 y tienes policies inseguras,
--- ejecuta estas líneas para eliminarlas:
-
 -- DROP POLICY IF EXISTS "anon_insert_orders"      ON orders;
 -- DROP POLICY IF EXISTS "anon_insert_order_items" ON order_items;
 -- DROP POLICY IF EXISTS "anon_select_orders"      ON orders;

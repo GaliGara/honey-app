@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createOrder } from "@/lib/supabase/orders";
+import type { PaymentMethod, PaymentStatus } from "@/types/order";
+
+/* ── Constantes de pago ────────────────────────────────────── */
+
+/**
+ * Datos bancarios de placeholder.
+ * TODO: reemplazar con datos reales antes de producción.
+ */
+const BANK_INFO = {
+  bank: "[Nombre del banco — pendiente de configurar]",
+  holder: "Honey Productos de la Colmena",
+  clabe: "000000000000000000",
+  account: "0000000000",
+  whatsapp: "+52 000 000 0000",
+  email: "pagos@honey.mx",
+} as const;
 
 /* ── Zod schemas ───────────────────────────────────────────── */
 
@@ -28,14 +44,67 @@ const createOrderBodySchema = z.object({
     .min(1, "El pedido debe tener al menos un producto"),
   shipping: z.number().nonnegative(),
   taxes: z.number().nonnegative(),
+  paymentMethod: z.enum([
+    "bank_transfer",
+    "bank_deposit",
+    "cash_on_delivery",
+    "mercado_pago",
+  ]),
 });
 
 type CreateOrderBody = z.infer<typeof createOrderBodySchema>;
 
-/* ── Helpers ───────────────────────────────────────────────── */
+/* ── Helpers de pago ───────────────────────────────────────── */
 
 function generateOrderNumber(): string {
   return `HNY-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+}
+
+function resolvePaymentStatus(method: PaymentMethod): PaymentStatus {
+  switch (method) {
+    case "bank_transfer":
+      return "pending_transfer";
+    case "bank_deposit":
+      return "pending_deposit";
+    case "cash_on_delivery":
+      return "pending_cash_payment";
+    case "mercado_pago":
+      return "pending_payment";
+  }
+}
+
+function resolvePaymentProvider(method: PaymentMethod): string {
+  return method === "mercado_pago" ? "mercado_pago" : "manual";
+}
+
+function buildPaymentInstructions(
+  method: PaymentMethod,
+  orderNumber: string
+): string {
+  switch (method) {
+    case "bank_transfer":
+      return [
+        `Banco: ${BANK_INFO.bank}`,
+        `Titular: ${BANK_INFO.holder}`,
+        `CLABE: ${BANK_INFO.clabe}`,
+        `Referencia: ${orderNumber}`,
+        `WhatsApp: ${BANK_INFO.whatsapp}`,
+        `Email: ${BANK_INFO.email}`,
+      ].join("\n");
+    case "bank_deposit":
+      return [
+        `Banco: ${BANK_INFO.bank}`,
+        `Titular: ${BANK_INFO.holder}`,
+        `Cuenta: ${BANK_INFO.account}`,
+        `Referencia: ${orderNumber}`,
+        `WhatsApp: ${BANK_INFO.whatsapp}`,
+        `Email: ${BANK_INFO.email}`,
+      ].join("\n");
+    case "cash_on_delivery":
+      return "El pago se realizará al momento de la entrega. Solo efectivo.";
+    case "mercado_pago":
+      return "Integración con Mercado Pago disponible en la siguiente fase.";
+  }
 }
 
 /* ── POST /api/orders ──────────────────────────────────────── */
@@ -66,6 +135,7 @@ export async function POST(request: Request) {
   }
 
   const data: CreateOrderBody = parsed.data;
+  const method = data.paymentMethod as PaymentMethod;
 
   /* 3. Recalcular totales en el servidor (no confiar en el cliente) */
   const subtotal = data.items.reduce(
@@ -77,7 +147,14 @@ export async function POST(request: Request) {
   /* 4. Generar número de orden en el servidor */
   const orderNumber = generateOrderNumber();
 
-  /* 5. Persistir en Supabase */
+  /* 5. Resolver datos de pago */
+  const paymentStatus = resolvePaymentStatus(method);
+  const paymentProvider = resolvePaymentProvider(method);
+  const paymentInstructions = buildPaymentInstructions(method, orderNumber);
+  const manualPaymentReference =
+    method !== "mercado_pago" ? orderNumber : undefined;
+
+  /* 6. Persistir en Supabase */
   try {
     const result = await createOrder({
       orderNumber,
@@ -102,10 +179,21 @@ export async function POST(request: Request) {
       shipping: data.shipping,
       taxes: data.taxes,
       total,
+      paymentProvider,
+      paymentStatus,
+      paymentMethod: method,
+      paymentInstructions,
+      manualPaymentReference,
     });
 
     return NextResponse.json(
-      { ok: true, orderId: result.orderId, orderNumber: result.orderNumber },
+      {
+        ok: true,
+        orderId: result.orderId,
+        orderNumber: result.orderNumber,
+        paymentMethod: method,
+        paymentStatus,
+      },
       { status: 201 }
     );
   } catch (err) {
