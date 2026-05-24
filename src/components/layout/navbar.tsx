@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { siteConfig } from "@/constants/site";
 
-const NAV_LINKS = ["Tienda", "Origen", "Colecciones", "Regalos"] as const;
+const NAV_LINKS = [
+  { label: "Tienda",      href: "/tienda" },
+  { label: "Origen",      href: "#" },
+  { label: "Colecciones", href: "#" },
+  { label: "Regalos",     href: "#" },
+] as const;
 
 function SearchIcon() {
   return (
@@ -78,9 +83,9 @@ export default function Navbar() {
 
           {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-7">
-            {NAV_LINKS.map((link) => (
-              <a key={link} href="#" className="nav-link">
-                {link}
+            {NAV_LINKS.map(({ label, href }) => (
+              <a key={label} href={href} className="nav-link">
+                {label}
               </a>
             ))}
           </div>
@@ -131,15 +136,15 @@ export default function Navbar() {
         {/* Mobile dropdown */}
         {menuOpen && (
           <div className="md:hidden mt-4 pt-4 flex flex-col gap-1" style={{ borderTop: "1px solid rgba(255,255,255,0.35)" }}>
-            {NAV_LINKS.map((link) => (
+            {NAV_LINKS.map(({ label, href }) => (
               <a
-                key={link}
-                href="#"
+                key={label}
+                href={href}
                 className="py-2.5 text-sm tracking-wide"
                 style={{ color: "#6F5635" }}
                 onClick={() => setMenuOpen(false)}
               >
-                {link}
+                {label}
               </a>
             ))}
           </div>
