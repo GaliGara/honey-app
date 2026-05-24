@@ -1,4 +1,8 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import type { Product, ProductColorScheme, ProductVisual } from "@/types/product";
+import { useCartStore } from "@/store/use-cart";
 
 /* ── Color configurations ───────────────────────────────── */
 
@@ -310,10 +314,44 @@ function HeartIcon() {
   );
 }
 
+/* ── Cart icon ──────────────────────────────────────────── */
+
+function CartPlusIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+      <line x1="3" y1="6" x2="21" y2="6" />
+      <path d="M12 11v6M9 14h6" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
 /* ── Product Card ───────────────────────────────────────── */
 
 export default function ProductCard({ product }: { product: Product }) {
   const { name, category, size, price, badge, description, visual, colorScheme } = product;
+
+  const addItem = useCartStore((s) => s.addItem);
+  const [justAdded, setJustAdded] = useState(false);
+
+  const handleAddToCart = () => {
+    addItem(product);
+    setJustAdded(true);
+  };
+
+  useEffect(() => {
+    if (!justAdded) return;
+    const timer = setTimeout(() => setJustAdded(false), 1800);
+    return () => clearTimeout(timer);
+  }, [justAdded]);
 
   return (
     <article className="product-card rounded-2xl flex flex-col overflow-hidden group">
@@ -400,15 +438,24 @@ export default function ProductCard({ product }: { product: Product }) {
           </span>
 
           <button
-            className="px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-300"
+            onClick={handleAddToCart}
+            disabled={justAdded}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-300"
             style={{
-              background: "linear-gradient(135deg, #D4AF37 0%, #E5A93B 50%, #B87514 100%)",
-              color: "#2C1E11",
-              boxShadow: "0 3px 12px rgba(212,175,55,0.28)",
+              background: justAdded
+                ? "linear-gradient(135deg, #4A8A4A 0%, #3A6A3A 100%)"
+                : "linear-gradient(135deg, #D4AF37 0%, #E5A93B 50%, #B87514 100%)",
+              color: "#fff",
+              boxShadow: justAdded
+                ? "0 3px 12px rgba(74,138,74,0.28)"
+                : "0 3px 12px rgba(212,175,55,0.28)",
             }}
-            aria-label={`Ver producto: ${name}`}
+            aria-label={
+              justAdded ? `${name} añadido al carrito` : `Agregar ${name} al carrito`
+            }
           >
-            Ver producto
+            {justAdded ? <CheckIcon /> : <CartPlusIcon />}
+            {justAdded ? "¡Añadido!" : "Agregar"}
           </button>
         </div>
       </div>

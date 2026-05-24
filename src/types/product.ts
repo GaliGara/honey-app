@@ -17,6 +17,18 @@ export type ProductColorScheme =
   | "floral"
   | "wood";
 
+export interface CartItem {
+  productId: string;
+  slug: string;
+  name: string;
+  category: ProductCategory;
+  price: number;
+  size: string;
+  quantity: number;
+  visual: ProductVisual;
+  colorScheme: ProductColorScheme;
+}
+
 export interface Product {
   id: string;
   slug: string;
