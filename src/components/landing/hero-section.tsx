@@ -307,12 +307,12 @@ export default function HeroSection() {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <button className="premium-button text-sm">
+            <a href="/tienda" className="premium-button text-sm">
               Descubrir colección
-            </button>
-            <button className="secondary-button text-sm">
-              Conocer nuestro origen
-            </button>
+            </a>
+            <a href="/tienda" className="secondary-button text-sm">
+              Explorar tienda
+            </a>
           </div>
 
           {/* Stats / trust strip */}

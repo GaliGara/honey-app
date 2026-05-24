@@ -6,10 +6,8 @@ import CartButton from "@/components/cart/cart-button";
 import CartDrawer from "@/components/cart/cart-drawer";
 
 const NAV_LINKS = [
-  { label: "Tienda",      href: "/tienda" },
-  { label: "Origen",      href: "#" },
-  { label: "Colecciones", href: "#" },
-  { label: "Regalos",     href: "#" },
+  { label: "Inicio",  href: "/" },
+  { label: "Tienda",  href: "/tienda" },
 ] as const;
 
 function SearchIcon() {
@@ -93,13 +91,14 @@ export default function Navbar() {
                 <SearchIcon />
               </button>
 
-              <button
-                className="hidden sm:flex p-2 rounded-full transition-colors duration-300"
+              <a
+                href="/cuenta"
+                className="flex p-2 rounded-full transition-colors duration-300"
                 style={{ color: "#6F5635" }}
                 aria-label="Mi cuenta"
               >
                 <UserIcon />
-              </button>
+              </a>
 
               {/* Cart button con badge y drawer */}
               <CartButton />

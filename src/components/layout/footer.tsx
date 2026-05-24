@@ -1,10 +1,10 @@
 import { siteConfig } from "@/constants/site";
 
 const FOOTER_LINKS = [
-  { label: "Tienda",      href: "#" },
-  { label: "Origen",      href: "#" },
-  { label: "Colecciones", href: "#" },
-  { label: "Contacto",    href: "#" },
+  { label: "Inicio",     href: "/" },
+  { label: "Tienda",     href: "/tienda" },
+  { label: "Cuenta",     href: "/cuenta" },
+  { label: "Contacto",   href: "#" },
 ] as const;
 
 const LEGAL_LINKS = [

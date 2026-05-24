@@ -83,9 +83,9 @@ export default function CtaSection() {
         </p>
 
         {/* CTA */}
-        <button className="premium-button text-sm px-10">
+        <a href="/tienda" className="premium-button text-sm px-10">
           Explorar tienda
-        </button>
+        </a>
 
         {/* Trust strip */}
         <div className="mt-14 flex items-center justify-center gap-3 flex-wrap">
