@@ -6,8 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/use-cart";
 import { checkoutSchema, type CheckoutSchema } from "@/lib/validations/order";
-import { isSupabaseConfigured } from "@/lib/supabase/client";
-import { createOrder } from "@/lib/supabase/orders";
 import type { OrderSummaryData } from "@/types/order";
 import OrderSummary from "./order-summary";
 import CheckoutEmptyState from "./checkout-empty-state";
@@ -17,8 +15,13 @@ import CheckoutEmptyState from "./checkout-empty-state";
 const SHIPPING = 8;
 const TAXES = 0;
 
-function generateOrderNumber(): string {
-  return `HNY-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+/* ── API response type ──────────────────────────────────────── */
+
+interface OrderApiResponse {
+  ok: boolean;
+  orderId?: string;
+  orderNumber?: string;
+  message?: string;
 }
 
 /* ── Field sub-components ───────────────────────────────────── */
@@ -204,27 +207,6 @@ function ArrowIcon() {
   );
 }
 
-function WarningIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-      style={{ color: "#B87514", flexShrink: 0, marginTop: 1 }}
-    >
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  );
-}
-
 function ErrorIcon() {
   return (
     <svg
@@ -245,8 +227,6 @@ function ErrorIcon() {
     </svg>
   );
 }
-
-/* ── Loading skeleton ───────────────────────────────────────── */
 
 function LoadingSkeleton() {
   return (
@@ -313,42 +293,51 @@ export default function CheckoutForm() {
 
   const subtotal = getSubtotal();
   const total = subtotal + SHIPPING + TAXES;
-  const configured = isSupabaseConfigured();
 
   async function onSubmit(data: CheckoutSchema) {
     setSubmitError(null);
 
-    if (!configured) {
-      setSubmitError(
-        "Supabase no está configurado. Agrega NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY en .env.local para habilitar el guardado de pedidos."
-      );
-      return;
-    }
-
     try {
-      const orderNumber = generateOrderNumber();
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: data.fullName,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          city: data.city,
+          state: data.state || undefined,
+          postalCode: data.postalCode || undefined,
+          notes: data.notes || undefined,
+          items: items.map((item) => ({
+            productId: item.productId,
+            slug: item.slug,
+            name: item.name,
+            category: item.category,
+            size: item.size,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          shipping: SHIPPING,
+          taxes: TAXES,
+        }),
+      });
+
+      const result = (await response.json()) as OrderApiResponse;
+
+      if (!result.ok || !result.orderNumber) {
+        throw new Error(
+          result.message ?? "Error al procesar el pedido. Intenta nuevamente."
+        );
+      }
+
+      /* ── Éxito: guardar resumen y redirigir ── */
       const currentSubtotal = getSubtotal();
       const currentTotal = currentSubtotal + SHIPPING + TAXES;
 
-      const { orderNumber: confirmedNumber } = await createOrder({
-        orderNumber,
-        customerName: data.fullName,
-        customerEmail: data.email,
-        customerPhone: data.phone,
-        address: data.address,
-        city: data.city,
-        state: data.state || undefined,
-        postalCode: data.postalCode || undefined,
-        notes: data.notes || undefined,
-        items,
-        subtotal: currentSubtotal,
-        shipping: SHIPPING,
-        taxes: TAXES,
-        total: currentTotal,
-      });
-
       const orderSummary: OrderSummaryData = {
-        orderNumber: confirmedNumber,
+        orderNumber: result.orderNumber,
         customerName: data.fullName,
         customerEmail: data.email,
         total: currentTotal,
@@ -359,7 +348,7 @@ export default function CheckoutForm() {
       sessionStorage.setItem("honey-last-order", JSON.stringify(orderSummary));
       clearCart();
       closeCart();
-      router.push(`/gracias?order=${confirmedNumber}`);
+      router.push(`/gracias?order=${result.orderNumber}`);
     } catch (err) {
       setSubmitError(
         err instanceof Error
@@ -371,64 +360,6 @@ export default function CheckoutForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-
-      {/* ── Supabase not configured warning ── */}
-      {!configured && (
-        <div
-          className="glass-panel rounded-xl px-5 py-4 mb-6 flex items-start gap-3"
-          style={{ borderColor: "rgba(184,117,20,0.4)" }}
-        >
-          <WarningIcon />
-          <div className="flex flex-col gap-1">
-            <p
-              style={{
-                color: "#B87514",
-                fontWeight: 600,
-                fontSize: "0.85rem",
-              }}
-            >
-              Supabase no está configurado
-            </p>
-            <p style={{ color: "#6F5635", fontSize: "0.8rem", lineHeight: 1.5 }}>
-              Agrega{" "}
-              <code
-                style={{
-                  background: "rgba(212,175,55,0.15)",
-                  borderRadius: 4,
-                  padding: "0 4px",
-                  fontSize: "0.75rem",
-                }}
-              >
-                NEXT_PUBLIC_SUPABASE_URL
-              </code>{" "}
-              y{" "}
-              <code
-                style={{
-                  background: "rgba(212,175,55,0.15)",
-                  borderRadius: 4,
-                  padding: "0 4px",
-                  fontSize: "0.75rem",
-                }}
-              >
-                NEXT_PUBLIC_SUPABASE_ANON_KEY
-              </code>{" "}
-              en{" "}
-              <code
-                style={{
-                  background: "rgba(212,175,55,0.15)",
-                  borderRadius: 4,
-                  padding: "0 4px",
-                  fontSize: "0.75rem",
-                }}
-              >
-                .env.local
-              </code>{" "}
-              para habilitar el guardado de pedidos.
-            </p>
-          </div>
-        </div>
-      )}
-
       <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-8 items-start">
 
         {/* ── Left: Form fields ── */}
@@ -503,7 +434,13 @@ export default function CheckoutForm() {
               style={{ borderColor: "rgba(200,70,50,0.3)" }}
             >
               <ErrorIcon />
-              <p style={{ color: "rgba(200,70,50,0.9)", fontSize: "0.85rem", lineHeight: 1.5 }}>
+              <p
+                style={{
+                  color: "rgba(200,70,50,0.9)",
+                  fontSize: "0.85rem",
+                  lineHeight: 1.5,
+                }}
+              >
                 {submitError}
               </p>
             </div>
@@ -512,13 +449,9 @@ export default function CheckoutForm() {
           {/* Submit button */}
           <button
             type="submit"
-            disabled={isSubmitting || !configured}
+            disabled={isSubmitting}
             className="premium-button w-full text-base flex items-center justify-center gap-2.5 mt-2"
-            style={
-              isSubmitting || !configured
-                ? { opacity: 0.55, cursor: "not-allowed" }
-                : {}
-            }
+            style={isSubmitting ? { opacity: 0.65, cursor: "wait" } : {}}
           >
             {isSubmitting ? (
               "Guardando pedido..."

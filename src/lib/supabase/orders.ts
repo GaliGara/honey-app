@@ -1,7 +1,20 @@
-import { createSupabaseClient } from "./client";
-import type { CartItem } from "@/types/product";
+/**
+ * Módulo server-only — no importar desde componentes cliente.
+ * Usa createSupabaseServerClient (service_role).
+ */
+import { createSupabaseServerClient } from "./server";
 
-interface CreateOrderInput {
+export interface OrderItemInput {
+  productId: string;
+  slug: string;
+  name: string;
+  category: string;
+  size: string | null;
+  price: number;
+  quantity: number;
+}
+
+export interface CreateOrderInput {
   orderNumber: string;
   customerName: string;
   customerEmail: string;
@@ -11,14 +24,14 @@ interface CreateOrderInput {
   state?: string;
   postalCode?: string;
   notes?: string;
-  items: CartItem[];
+  items: OrderItemInput[];
   subtotal: number;
   shipping: number;
   taxes: number;
   total: number;
 }
 
-interface CreateOrderResult {
+export interface CreateOrderResult {
   orderId: string;
   orderNumber: string;
 }
@@ -26,9 +39,9 @@ interface CreateOrderResult {
 export async function createOrder(
   input: CreateOrderInput
 ): Promise<CreateOrderResult> {
-  const supabase = createSupabaseClient();
+  const supabase = createSupabaseServerClient();
 
-  /* ── 1. Insert order row ── */
+  /* ── 1. Insertar orden ─────────────────────────────────── */
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
@@ -54,14 +67,14 @@ export async function createOrder(
     throw new Error(`Error al guardar el pedido: ${orderError.message}`);
   }
 
-  /* ── 2. Insert order items ── */
+  /* ── 2. Insertar líneas del pedido ─────────────────────── */
   const orderItems = input.items.map((item) => ({
     order_id: order.id,
     product_id: item.productId,
     product_slug: item.slug,
     product_name: item.name,
-    product_category: item.category as string,
-    product_size: item.size ?? null,
+    product_category: item.category,
+    product_size: item.size,
     quantity: item.quantity,
     unit_price: item.price,
     total: item.price * item.quantity,

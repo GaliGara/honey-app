@@ -1,6 +1,6 @@
 -- ============================================================
 -- Honey Shop — Supabase Schema
--- Fase 6: Órdenes locales (sin auth)
+-- Fase 6.1: Órdenes via API Route (service_role)
 --
 -- Instrucciones:
 -- 1. Abre tu proyecto en https://supabase.com
@@ -61,26 +61,27 @@ CREATE INDEX IF NOT EXISTS order_items_order_id_idx   ON order_items(order_id);
 
 
 -- ── Row Level Security ──────────────────────────────────────
--- ADVERTENCIA: estas políticas son permisivas para la fase MVP.
--- Antes de producción real se deben limitar a usuarios autenticados
--- o validar con una Edge Function intermediaria.
+-- A partir de Fase 6.1, los inserts se hacen desde la API Route del servidor
+-- usando service_role, que bypasea RLS automáticamente.
+--
+-- Con esta arquitectura NO se necesitan policies INSERT para anon.
+-- Se mantiene RLS habilitado para proteger contra acceso directo.
 
 ALTER TABLE orders     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
--- Permite insertar desde el anon key (frontend sin auth)
--- TODO Fase 6+: reemplazar con auth.uid() check cuando se agregue auth
-CREATE POLICY "anon_insert_orders"
-  ON orders
-  FOR INSERT
-  TO anon
-  WITH CHECK (true);
+-- Nota: No se crean policies para el rol anon.
+-- Toda escritura pasa por /api/orders (service_role, servidor).
+-- Toda lectura de admin se hará con service_role (dashboard futuro).
 
-CREATE POLICY "anon_insert_order_items"
-  ON order_items
-  FOR INSERT
-  TO anon
-  WITH CHECK (true);
 
--- Solo el rol service_role puede leer y modificar pedidos (admin futuro)
--- (no crear política de SELECT para anon por seguridad)
+-- ============================================================
+-- LIMPIEZA (solo si ya ejecutaste el schema anterior de Fase 6)
+-- ============================================================
+-- Si ejecutaste el script de Fase 6 y tienes policies inseguras,
+-- ejecuta estas líneas para eliminarlas:
+
+-- DROP POLICY IF EXISTS "anon_insert_orders"      ON orders;
+-- DROP POLICY IF EXISTS "anon_insert_order_items" ON order_items;
+-- DROP POLICY IF EXISTS "anon_select_orders"      ON orders;
+-- DROP POLICY IF EXISTS "anon_select_order_items" ON order_items;
