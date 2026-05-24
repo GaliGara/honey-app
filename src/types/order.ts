@@ -2,8 +2,7 @@
 export type PaymentMethod =
   | "bank_transfer"
   | "bank_deposit"
-  | "cash_on_delivery"
-  | "mercado_pago";
+  | "cash_on_delivery";
 
 /**
  * Estados de pago.
@@ -11,16 +10,13 @@ export type PaymentMethod =
  *   bank_transfer    → pending_transfer
  *   bank_deposit     → pending_deposit
  *   cash_on_delivery → pending_cash_payment
- *   mercado_pago     → pending_payment
- *   (resueltos)      → paid | payment_failed | cancelled | refunded
+ *   (resueltos)      → paid | cancelled | refunded
  */
 export type PaymentStatus =
   | "pending_transfer"
   | "pending_deposit"
   | "pending_cash_payment"
-  | "pending_payment"
   | "paid"
-  | "payment_failed"
   | "cancelled"
   | "refunded";
 

@@ -1,22 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createOrder } from "@/lib/supabase/orders";
+import { buildManualPaymentInstructions } from "@/constants/payment";
 import type { PaymentMethod, PaymentStatus } from "@/types/order";
-
-/* ── Constantes de pago ────────────────────────────────────── */
-
-/**
- * Datos bancarios de placeholder.
- * TODO: reemplazar con datos reales antes de producción.
- */
-const BANK_INFO = {
-  bank: "[Nombre del banco — pendiente de configurar]",
-  holder: "Honey Productos de la Colmena",
-  clabe: "000000000000000000",
-  account: "0000000000",
-  whatsapp: "+52 000 000 0000",
-  email: "pagos@honey.mx",
-} as const;
 
 /* ── Zod schemas ───────────────────────────────────────────── */
 
@@ -44,17 +30,15 @@ const createOrderBodySchema = z.object({
     .min(1, "El pedido debe tener al menos un producto"),
   shipping: z.number().nonnegative(),
   taxes: z.number().nonnegative(),
-  paymentMethod: z.enum([
-    "bank_transfer",
-    "bank_deposit",
-    "cash_on_delivery",
-    "mercado_pago",
-  ]),
+  paymentMethod: z.enum(
+    ["bank_transfer", "bank_deposit", "cash_on_delivery"],
+    { message: "Método de pago inválido" }
+  ),
 });
 
 type CreateOrderBody = z.infer<typeof createOrderBodySchema>;
 
-/* ── Helpers de pago ───────────────────────────────────────── */
+/* ── Helpers ───────────────────────────────────────────────── */
 
 function generateOrderNumber(): string {
   return `HNY-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
@@ -62,48 +46,9 @@ function generateOrderNumber(): string {
 
 function resolvePaymentStatus(method: PaymentMethod): PaymentStatus {
   switch (method) {
-    case "bank_transfer":
-      return "pending_transfer";
-    case "bank_deposit":
-      return "pending_deposit";
-    case "cash_on_delivery":
-      return "pending_cash_payment";
-    case "mercado_pago":
-      return "pending_payment";
-  }
-}
-
-function resolvePaymentProvider(method: PaymentMethod): string {
-  return method === "mercado_pago" ? "mercado_pago" : "manual";
-}
-
-function buildPaymentInstructions(
-  method: PaymentMethod,
-  orderNumber: string
-): string {
-  switch (method) {
-    case "bank_transfer":
-      return [
-        `Banco: ${BANK_INFO.bank}`,
-        `Titular: ${BANK_INFO.holder}`,
-        `CLABE: ${BANK_INFO.clabe}`,
-        `Referencia: ${orderNumber}`,
-        `WhatsApp: ${BANK_INFO.whatsapp}`,
-        `Email: ${BANK_INFO.email}`,
-      ].join("\n");
-    case "bank_deposit":
-      return [
-        `Banco: ${BANK_INFO.bank}`,
-        `Titular: ${BANK_INFO.holder}`,
-        `Cuenta: ${BANK_INFO.account}`,
-        `Referencia: ${orderNumber}`,
-        `WhatsApp: ${BANK_INFO.whatsapp}`,
-        `Email: ${BANK_INFO.email}`,
-      ].join("\n");
-    case "cash_on_delivery":
-      return "El pago se realizará al momento de la entrega. Solo efectivo.";
-    case "mercado_pago":
-      return "Integración con Mercado Pago disponible en la siguiente fase.";
+    case "bank_transfer":    return "pending_transfer";
+    case "bank_deposit":     return "pending_deposit";
+    case "cash_on_delivery": return "pending_cash_payment";
   }
 }
 
@@ -149,10 +94,7 @@ export async function POST(request: Request) {
 
   /* 5. Resolver datos de pago */
   const paymentStatus = resolvePaymentStatus(method);
-  const paymentProvider = resolvePaymentProvider(method);
-  const paymentInstructions = buildPaymentInstructions(method, orderNumber);
-  const manualPaymentReference =
-    method !== "mercado_pago" ? orderNumber : undefined;
+  const paymentInstructions = buildManualPaymentInstructions(method, orderNumber);
 
   /* 6. Persistir en Supabase */
   try {
@@ -179,11 +121,11 @@ export async function POST(request: Request) {
       shipping: data.shipping,
       taxes: data.taxes,
       total,
-      paymentProvider,
+      paymentProvider: "manual",
       paymentStatus,
       paymentMethod: method,
       paymentInstructions,
-      manualPaymentReference,
+      manualPaymentReference: orderNumber,
     });
 
     return NextResponse.json(

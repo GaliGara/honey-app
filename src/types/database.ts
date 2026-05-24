@@ -18,9 +18,9 @@ export type Database = {
           taxes: number;
           total: number;
           status: string;
-          /** Procesador de pago: 'mercado_pago' */
+          /** Procesador de pago. Valor actual: 'manual'. Reservado para pasarela futura. */
           payment_provider: string | null;
-          /** Estado del pago: pending_payment | paid | payment_failed | cancelled | refunded */
+          /** Estado del pago: pending_transfer | pending_deposit | pending_cash_payment | paid | cancelled | refunded */
           payment_status: string;
           /** ID de pago devuelto por Mercado Pago (payment_id) */
           payment_reference: string | null;

@@ -20,7 +20,7 @@ export default async function GraciasPage({
       <Navbar />
 
       <main
-        className="warm-radial-bg relative min-h-screen pt-20 pb-16 px-4 overflow-hidden"
+        className="warm-radial-bg relative min-h-screen pt-28 pb-16 px-4 overflow-hidden"
       >
         {/* Ambient decorative elements */}
         <div

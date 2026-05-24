@@ -65,15 +65,6 @@ function TruckIcon() {
   );
 }
 
-function CardIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <rect x="1" y="4" width="22" height="16" rx="2" />
-      <line x1="1" y1="10" x2="23" y2="10" />
-    </svg>
-  );
-}
-
 function CheckIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -101,15 +92,8 @@ const PAYMENT_OPTIONS: PaymentOption[] = [
   {
     id: "cash_on_delivery",
     label: "Pago contra entrega",
-    description: "Disponible solo en zonas seleccionadas.",
+    description: "Disponible solo en zonas seleccionadas. El pago se realiza al recibir.",
     icon: <TruckIcon />,
-  },
-  {
-    id: "mercado_pago",
-    label: "Mercado Pago",
-    description:
-      "Paga con tarjeta o medios disponibles en Mercado Pago. Puede aplicar comisión de procesamiento.",
-    icon: <CardIcon />,
   },
 ];
 
@@ -426,7 +410,7 @@ function ErrorIcon() {
 
 function LoadingSkeleton() {
   return (
-    <div className="grid lg:grid-cols-[1fr_400px] gap-8 animate-pulse">
+    <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-8 animate-pulse">
       <div className="flex flex-col gap-4">
         {[200, 220, 260, 120].map((h, i) => (
           <div
@@ -546,7 +530,7 @@ export default function CheckoutForm() {
         itemCount: items.reduce((s, i) => s + i.quantity, 0),
         createdAt: new Date().toISOString(),
         paymentMethod: result.paymentMethod ?? data.paymentMethod,
-        paymentStatus: result.paymentStatus ?? "pending_payment",
+        paymentStatus: result.paymentStatus ?? "pending_transfer",
       };
 
       sessionStorage.setItem("honey-last-order", JSON.stringify(orderSummary));
@@ -562,17 +546,12 @@ export default function CheckoutForm() {
     }
   }
 
-  const submitLabel =
-    selectedPayment === "mercado_pago"
-      ? "Confirmar y continuar"
-      : "Confirmar pedido";
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-8 items-start">
+      <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-8 lg:items-start">
 
         {/* ── Left: Form fields ── */}
-        <div>
+        <div className="w-full min-w-0">
           {/* Información de contacto */}
           <FormSection title="Información de contacto">
             <InputField
@@ -694,7 +673,7 @@ export default function CheckoutForm() {
               "Guardando pedido..."
             ) : (
               <>
-                {submitLabel}
+                Confirmar pedido
                 <ArrowIcon />
               </>
             )}
@@ -709,7 +688,7 @@ export default function CheckoutForm() {
         </div>
 
         {/* ── Right: Order summary (sticky desktop) ── */}
-        <div className="lg:sticky lg:top-28">
+        <div className="w-full lg:sticky lg:top-28">
           <OrderSummary
             items={items}
             subtotal={subtotal}

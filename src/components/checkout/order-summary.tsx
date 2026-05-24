@@ -20,7 +20,7 @@ interface OrderSummaryProps {
 
 export default function OrderSummary({ items, subtotal, shipping, total }: OrderSummaryProps) {
   return (
-    <div className="glass-panel rounded-2xl p-6 flex flex-col gap-5">
+    <div className="glass-panel rounded-2xl p-6 flex flex-col gap-5 w-full">
       {/* Header */}
       <div>
         <h2

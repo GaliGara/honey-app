@@ -1,6 +1,6 @@
 -- ============================================================
 -- Honey Shop — Supabase Schema
--- Fase 8.1: Métodos de pago manuales + Mercado Pago (prep)
+-- Fase 9: Pagos manuales únicos (sin pasarela)
 --
 -- Instrucciones:
 -- 1. Abre tu proyecto en https://supabase.com
@@ -29,49 +29,68 @@ CREATE TABLE IF NOT EXISTS orders (
   total         numeric(10, 2) NOT NULL,
   status        text NOT NULL DEFAULT 'pending',
 
-  -- ── Pago (Fase 8) ──────────────────────────────────────
-  payment_provider      text DEFAULT 'mercado_pago',
-  payment_status        text NOT NULL DEFAULT 'pending_payment',
+  -- ── Pago ────────────────────────────────────────────────
+  payment_provider      text DEFAULT 'manual',
+  payment_status        text NOT NULL DEFAULT 'pending_transfer',
+
+  -- Reservadas para una posible pasarela de pago futura.
+  -- Actualmente sin uso (pagos manuales únicamente).
   payment_reference     text,
   payment_preference_id text,
   payment_init_point    text,
   payment_status_detail text,
-  paid_at               timestamptz,
-  cancelled_at          timestamptz,
 
-  -- ── Método manual (Fase 8.1) ───────────────────────────
+  paid_at      timestamptz,
+  cancelled_at timestamptz,
+
+  -- ── Método manual ────────────────────────────────────────
   payment_method            text,
   payment_instructions      text,
   payment_proof_url         text,
   manual_payment_reference  text,
 
-  created_at    timestamptz DEFAULT now()
+  created_at timestamptz DEFAULT now()
 );
 
 COMMENT ON TABLE orders IS 'Pedidos del e-commerce Honey Shop';
+
 COMMENT ON COLUMN orders.status IS
   'Estado logístico: pending | confirmed | shipped | delivered | cancelled';
+
 COMMENT ON COLUMN orders.payment_provider IS
-  'Procesador de pago: mercado_pago | manual';
+  'Procesador de pago. Valor actual: manual. '
+  'Reservado para pasarela futura (p.ej. mercado_pago, stripe).';
+
 COMMENT ON COLUMN orders.payment_status IS
-  'Estado del pago: pending_transfer | pending_deposit | pending_cash_payment |'
-  ' pending_payment | paid | payment_failed | cancelled | refunded';
+  'Estado del pago: '
+  'pending_transfer | pending_deposit | pending_cash_payment | '
+  'paid | cancelled | refunded';
+
 COMMENT ON COLUMN orders.payment_method IS
-  'Método elegido: bank_transfer | bank_deposit | cash_on_delivery | mercado_pago';
+  'Método elegido por el cliente: '
+  'bank_transfer | bank_deposit | cash_on_delivery';
+
 COMMENT ON COLUMN orders.payment_reference IS
-  'ID de pago devuelto por Mercado Pago (payment_id)';
+  'ID de pago de pasarela (uso futuro — actualmente sin valor).';
+
 COMMENT ON COLUMN orders.payment_preference_id IS
-  'ID de preferencia creada en Mercado Pago';
+  'ID de preferencia de pasarela (uso futuro — actualmente sin valor).';
+
 COMMENT ON COLUMN orders.payment_init_point IS
-  'URL de checkout generada por Mercado Pago';
+  'URL de checkout de pasarela (uso futuro — actualmente sin valor).';
+
 COMMENT ON COLUMN orders.payment_status_detail IS
-  'Detalle adicional del estado (ej: accredited, pending_contingency)';
+  'Detalle adicional del estado de pasarela (uso futuro — actualmente sin valor).';
+
 COMMENT ON COLUMN orders.payment_instructions IS
-  'Instrucciones de pago generadas por el servidor (datos bancarios, etc.)';
+  'Instrucciones de pago generadas en el servidor desde src/constants/payment.ts. '
+  'Incluye datos bancarios (CLABE, titular, referencia) para métodos manuales.';
+
 COMMENT ON COLUMN orders.payment_proof_url IS
-  'URL del comprobante de pago subido por el cliente (uso futuro)';
+  'URL del comprobante de pago subido por el cliente (uso futuro).';
+
 COMMENT ON COLUMN orders.manual_payment_reference IS
-  'Referencia manual = order_number para métodos no-pasarela';
+  'Referencia manual del pedido, igual a order_number.';
 
 
 -- ── Tabla: order_items ─────────────────────────────────────
@@ -112,20 +131,21 @@ CREATE INDEX IF NOT EXISTS order_items_order_id_idx         ON order_items(order
 ALTER TABLE orders      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 
--- Nota: No se crean policies para el rol anon.
 -- Toda escritura pasa por /api/orders (service_role, servidor).
--- Toda lectura de admin se hará con service_role (dashboard futuro).
+-- Toda lectura de admin se hará con service_role (panel futuro).
 
 
 -- ============================================================
--- MIGRACIÓN — Solo para bases de datos existentes (Fase 6 / 6.1 / 8)
+-- MIGRACIÓN — Solo para bases de datos existentes (Fase 6 – 8.2)
 -- Ejecuta SOLO este bloque si ya tienes las tablas creadas.
+-- Las columnas de pasarela (payment_preference_id, etc.) se mantienen
+-- en la base de datos pero quedan reservadas para uso futuro.
 -- ============================================================
 
--- Columnas de Fase 8 (Mercado Pago prep):
+-- Columnas de Fase 8 (prep pasarela — ahora reservadas):
 ALTER TABLE orders
-  ADD COLUMN IF NOT EXISTS payment_provider      text DEFAULT 'mercado_pago',
-  ADD COLUMN IF NOT EXISTS payment_status        text NOT NULL DEFAULT 'pending_payment',
+  ADD COLUMN IF NOT EXISTS payment_provider      text DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS payment_status        text NOT NULL DEFAULT 'pending_transfer',
   ADD COLUMN IF NOT EXISTS payment_reference     text,
   ADD COLUMN IF NOT EXISTS payment_preference_id text,
   ADD COLUMN IF NOT EXISTS payment_init_point    text,
@@ -133,14 +153,14 @@ ALTER TABLE orders
   ADD COLUMN IF NOT EXISTS paid_at               timestamptz,
   ADD COLUMN IF NOT EXISTS cancelled_at          timestamptz;
 
--- Columnas de Fase 8.1 (métodos manuales):
+-- Columnas de Fase 8.1 (métodos manuales — en uso):
 ALTER TABLE orders
   ADD COLUMN IF NOT EXISTS payment_method           text,
   ADD COLUMN IF NOT EXISTS payment_instructions     text,
   ADD COLUMN IF NOT EXISTS payment_proof_url        text,
   ADD COLUMN IF NOT EXISTS manual_payment_reference text;
 
--- Índices nuevos:
+-- Índices:
 CREATE INDEX IF NOT EXISTS orders_payment_status_idx
   ON orders(payment_status);
 

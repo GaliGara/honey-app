@@ -4,7 +4,6 @@ export const PAYMENT_METHOD_VALUES = [
   "bank_transfer",
   "bank_deposit",
   "cash_on_delivery",
-  "mercado_pago",
 ] as const;
 
 export const checkoutSchema = z.object({
@@ -20,7 +19,7 @@ export const checkoutSchema = z.object({
   postalCode: z.string().optional(),
   notes: z.string().optional(),
   paymentMethod: z.enum(
-    ["bank_transfer", "bank_deposit", "cash_on_delivery", "mercado_pago"],
+    ["bank_transfer", "bank_deposit", "cash_on_delivery"],
     { message: "Selecciona un método de pago" }
   ),
 });

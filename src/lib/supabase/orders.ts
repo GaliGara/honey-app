@@ -29,7 +29,7 @@ export interface CreateOrderInput {
   shipping: number;
   taxes: number;
   total: number;
-  /** Procesador de pago: 'mercado_pago' | 'manual'. Por defecto 'mercado_pago'. */
+  /** Procesador de pago. Por defecto 'manual'. Reservado para pasarela futura. */
   paymentProvider?: string;
   /**
    * Estado inicial del pago.
