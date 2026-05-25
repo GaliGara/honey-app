@@ -40,7 +40,7 @@ export interface CreateOrderInput {
   paymentStatus?: string;
   /**
    * Método elegido por el cliente.
-   * Valores: bank_transfer | bank_deposit | cash_on_delivery | mercado_pago
+   * Valores: bank_transfer | bank_deposit | cash_on_delivery
    */
   paymentMethod?: string;
   /** Instrucciones de pago generadas en el servidor. */
@@ -77,7 +77,7 @@ export async function createOrder(
       taxes: input.taxes,
       total: input.total,
       status: "pending",
-      payment_provider: input.paymentProvider ?? "mercado_pago",
+      payment_provider: input.paymentProvider ?? "manual",
       payment_status: input.paymentStatus ?? "pending_payment",
       payment_method: input.paymentMethod ?? null,
       payment_instructions: input.paymentInstructions ?? null,

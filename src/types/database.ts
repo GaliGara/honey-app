@@ -32,7 +32,7 @@ export type Database = {
           payment_status_detail: string | null;
           paid_at: string | null;
           cancelled_at: string | null;
-          /** Método elegido por el cliente: bank_transfer | bank_deposit | cash_on_delivery | mercado_pago */
+          /** Método elegido por el cliente: bank_transfer | bank_deposit | cash_on_delivery */
           payment_method: string | null;
           /** Instrucciones de pago generadas por el servidor */
           payment_instructions: string | null;

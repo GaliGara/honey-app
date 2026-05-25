@@ -1,0 +1,150 @@
+import type { Metadata } from "next";
+import AdminHeader from "@/components/admin/admin-header";
+import AdminStats from "@/components/admin/admin-stats";
+import AdminPriorityOrders from "@/components/admin/admin-priority-orders";
+import AdminPaymentDonut from "@/components/admin/admin-payment-donut";
+import AdminActivityTimeline from "@/components/admin/admin-activity-timeline";
+import RecentAdminOrders from "@/components/admin/recent-admin-orders";
+import AdminHoneyBg from "@/components/admin/admin-honey-bg";
+import { getAdminStats, listOrders, listCriticalOrders } from "@/lib/admin/orders";
+
+export const metadata: Metadata = {
+  title: "Dashboard — Honey Admin",
+  robots: { index: false, follow: false },
+};
+
+export const revalidate = 0;
+
+const SL: React.CSSProperties = {
+  fontSize: "0.62rem",
+  fontWeight: 700,
+  letterSpacing: "0.12em",
+  textTransform: "uppercase",
+  color: "#B87514",
+  marginBottom: "0.625rem",
+};
+
+export default async function AdminDashboardPage() {
+  const [stats, criticalOrders, { orders: recentOrders }] = await Promise.all([
+    getAdminStats(),
+    listCriticalOrders(8),
+    listOrders({ limit: 8 }),
+  ]);
+
+  const hasCritical = criticalOrders.length > 0;
+
+  return (
+    <>
+      <AdminHeader
+        title="Dashboard"
+        subtitle={new Date().toLocaleDateString("es-MX", { dateStyle: "long" })}
+      />
+
+      <main
+        style={{
+          flex: 1,
+          padding: "1.25rem",
+          display: "flex",
+          flexDirection: "column",
+          gap: "1.5rem",
+        }}
+      >
+        {/* Métricas */}
+        <section className="admin-fade-up">
+          <p style={SL}>Resumen del día</p>
+          <AdminStats stats={stats} />
+        </section>
+
+        {/* Urgente + Pago */}
+        <div className="admin-dash-split admin-fade-up-1">
+          <section>
+            {hasCritical ? (
+              <>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.625rem" }}>
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 8, height: 8, borderRadius: "50%", background: "#f59e0b",
+                      boxShadow: "0 0 0 3px rgba(245,158,11,0.2)", flexShrink: 0,
+                    }}
+                  />
+                  <p style={{ ...SL, marginBottom: 0 }}>Atención urgente</p>
+                </div>
+                <AdminPriorityOrders orders={criticalOrders} />
+              </>
+            ) : (
+              <>
+                <p style={SL}>Pedidos recientes</p>
+                <RecentAdminOrders orders={recentOrders} />
+              </>
+            )}
+          </section>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            {/* Donut */}
+            <section>
+              <p style={SL}>Métodos de pago</p>
+              <div className="admin-card" style={{ padding: "1rem 1.125rem" }}>
+                <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#2C1E11", marginBottom: "0.875rem" }}>
+                  Distribución de pedidos
+                </p>
+                <AdminPaymentDonut stats={stats} />
+              </div>
+            </section>
+
+            {/* Quick notes */}
+            <section>
+              <p style={SL}>Notas operativas</p>
+              <div
+                className="admin-card"
+                style={{ padding: "1rem 1.125rem", position: "relative", overflow: "hidden" }}
+              >
+                <AdminHoneyBg opacity={0.045} />
+                <div style={{ position: "relative", zIndex: 1 }}>
+                  <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#B87514", marginBottom: "0.75rem" }}>
+                    Recordatorios
+                  </p>
+                  {[
+                    "Entregas en CDMX: 24–48 h hábiles.",
+                    "Confirma pagos antes de despachar.",
+                    "Productos artesanales, manejo cuidadoso.",
+                    "Actualiza el estado al hacer envíos.",
+                  ].map((note, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex", gap: "0.5rem", alignItems: "flex-start",
+                        padding: "0.3rem 0",
+                        borderBottom: i < 3 ? "1px solid rgba(184,117,20,0.07)" : "none",
+                      }}
+                    >
+                      <span style={{ color: "#D4AF37", fontSize: "0.68rem", marginTop: "3px", flexShrink: 0 }}>◆</span>
+                      <p style={{ fontSize: "0.78rem", color: "#6F5635", lineHeight: 1.5 }}>{note}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* Recientes + Actividad */}
+        <div className="admin-dash-split admin-fade-up-2">
+          {hasCritical && (
+            <section>
+              <p style={SL}>Pedidos recientes</p>
+              <RecentAdminOrders orders={recentOrders} />
+            </section>
+          )}
+
+          <section style={hasCritical ? {} : { gridColumn: "1 / -1" }}>
+            <p style={SL}>Actividad reciente</p>
+            <div className="admin-card" style={{ padding: "0.875rem 1rem" }}>
+              <AdminActivityTimeline orders={recentOrders} />
+            </div>
+          </section>
+        </div>
+      </main>
+    </>
+  );
+}

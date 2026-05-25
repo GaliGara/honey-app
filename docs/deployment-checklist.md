@@ -27,6 +27,8 @@ Completa cada punto en orden antes de hacer deploy a producción en Vercel.
 - [ ] Agregar `SUPABASE_SERVICE_ROLE_KEY` (valor: clave service_role)
   - Marcar como **sensitive** / no exponer en logs
   - Aplicar solo a entornos **Production** y **Preview** (no Development)
+- [ ] Agregar `ADMIN_PASSWORD` (contraseña del panel admin — nunca NEXT_PUBLIC_)
+- [ ] Agregar `ADMIN_SESSION_TOKEN` (token aleatorio ≥32 chars — generar con `openssl rand -base64 48`)
 - [ ] Verificar que `.env.local` NO está en el repositorio (lo cubre `.gitignore`)
 
 ---
@@ -121,3 +123,4 @@ pnpm build
 | `docs/env.example` | Plantilla de variables de entorno |
 | `docs/supabase-schema.sql` | SQL completo para crear las tablas |
 | `docs/manual-payments.md` | Flujo de pagos manuales y gestión de pedidos |
+| `docs/admin-dashboard.md` | Guía de uso del panel de administración |

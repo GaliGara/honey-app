@@ -107,10 +107,10 @@ export default function Navbar() {
               </button>
 
               <a
-                href="/cuenta"
+                href="/login"
                 className="flex p-2 rounded-full transition-colors duration-300"
                 style={{ color: "#6F5635" }}
-                aria-label="Mi cuenta"
+                aria-label="Iniciar sesión"
               >
                 <UserIcon />
               </a>
