@@ -58,7 +58,7 @@ export default function AdminPaymentDonut({ stats }: Props) {
   });
 
   return (
-    <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+    <div className="admin-payment-donut" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
       {/* SVG Donut */}
       <div style={{ position: "relative", width: 108, height: 108, flexShrink: 0 }}>
         <svg viewBox="0 0 100 100" style={{ width: "100%", height: "100%" }}>

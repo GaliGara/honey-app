@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import AdminHeader from "@/components/admin/admin-header";
 import AdminStats from "@/components/admin/admin-stats";
-import AdminPriorityOrders from "@/components/admin/admin-priority-orders";
 import AdminPaymentDonut from "@/components/admin/admin-payment-donut";
 import AdminActivityTimeline from "@/components/admin/admin-activity-timeline";
 import RecentAdminOrders from "@/components/admin/recent-admin-orders";
 import AdminHoneyBg from "@/components/admin/admin-honey-bg";
-import { getAdminStats, listOrders, listCriticalOrders } from "@/lib/admin/orders";
+import { getAdminStats, listOrders } from "@/lib/admin/orders";
 
 export const metadata: Metadata = {
   title: "Dashboard — Honey Admin",
@@ -25,13 +25,12 @@ const SL: React.CSSProperties = {
 };
 
 export default async function AdminDashboardPage() {
-  const [stats, criticalOrders, { orders: recentOrders }] = await Promise.all([
+  const [stats, { orders: recentOrders }] = await Promise.all([
     getAdminStats(),
-    listCriticalOrders(8),
     listOrders({ limit: 8 }),
   ]);
 
-  const hasCritical = criticalOrders.length > 0;
+  const attentionCount = stats.awaitingPaymentOrders + stats.pendingOrders;
 
   return (
     <>
@@ -40,47 +39,20 @@ export default async function AdminDashboardPage() {
         subtitle={new Date().toLocaleDateString("es-MX", { dateStyle: "long" })}
       />
 
-      <main
-        style={{
-          flex: 1,
-          padding: "1.25rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.5rem",
-        }}
-      >
+      <main className="admin-page-main">
         {/* Métricas */}
         <section className="admin-fade-up">
           <p style={SL}>Resumen del día</p>
           <AdminStats stats={stats} />
         </section>
 
-        {/* Urgente + Pago */}
-        <div className="admin-dash-split admin-fade-up-1">
+        <div className="admin-dashboard-grid admin-fade-up-1">
           <section>
-            {hasCritical ? (
-              <>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.625rem" }}>
-                  <span
-                    aria-hidden
-                    style={{
-                      width: 8, height: 8, borderRadius: "50%", background: "#f59e0b",
-                      boxShadow: "0 0 0 3px rgba(245,158,11,0.2)", flexShrink: 0,
-                    }}
-                  />
-                  <p style={{ ...SL, marginBottom: 0 }}>Atención urgente</p>
-                </div>
-                <AdminPriorityOrders orders={criticalOrders} />
-              </>
-            ) : (
-              <>
-                <p style={SL}>Pedidos recientes</p>
-                <RecentAdminOrders orders={recentOrders} />
-              </>
-            )}
+            <p style={SL}>Pedidos recientes</p>
+            <RecentAdminOrders orders={recentOrders} />
           </section>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          <div className="admin-dashboard-side">
             {/* Donut */}
             <section>
               <p style={SL}>Métodos de pago</p>
@@ -91,6 +63,52 @@ export default async function AdminDashboardPage() {
                 <AdminPaymentDonut stats={stats} />
               </div>
             </section>
+
+            {attentionCount > 0 && (
+              <section>
+                <p style={SL}>Atención requerida</p>
+                <div
+                  className="admin-card"
+                  style={{
+                    padding: "0.95rem 1rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "0.875rem",
+                    borderLeft: "3px solid rgba(245,158,11,0.5)",
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: "0.9rem", fontWeight: 700, color: "#2C1E11" }}>
+                      {stats.awaitingPaymentOrders} pago{stats.awaitingPaymentOrders !== 1 ? "s" : ""} requieren revisión
+                    </p>
+                    <p style={{ fontSize: "0.76rem", color: "#6F5635", lineHeight: 1.45 }}>
+                      {stats.pendingOrders} pedido{stats.pendingOrders !== 1 ? "s" : ""} por atender.
+                    </p>
+                  </div>
+                  <Link
+                    href="/admin/orders"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      padding: "0.45rem 0.7rem",
+                      borderRadius: "0.5rem",
+                      border: "1px solid rgba(184,117,20,0.22)",
+                      background: "rgba(255,255,255,0.58)",
+                      color: "#B87514",
+                      fontSize: "0.76rem",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
+                    }}
+                  >
+                    Ver pedidos
+                  </Link>
+                </div>
+              </section>
+            )}
 
             {/* Quick notes */}
             <section>
@@ -125,24 +143,14 @@ export default async function AdminDashboardPage() {
                 </div>
               </div>
             </section>
-          </div>
-        </div>
 
-        {/* Recientes + Actividad */}
-        <div className="admin-dash-split admin-fade-up-2">
-          {hasCritical && (
             <section>
-              <p style={SL}>Pedidos recientes</p>
-              <RecentAdminOrders orders={recentOrders} />
+              <p style={SL}>Actividad reciente</p>
+              <div className="admin-card" style={{ padding: "0.875rem 1rem" }}>
+                <AdminActivityTimeline orders={recentOrders} />
+              </div>
             </section>
-          )}
-
-          <section style={hasCritical ? {} : { gridColumn: "1 / -1" }}>
-            <p style={SL}>Actividad reciente</p>
-            <div className="admin-card" style={{ padding: "0.875rem 1rem" }}>
-              <AdminActivityTimeline orders={recentOrders} />
-            </div>
-          </section>
+          </div>
         </div>
       </main>
     </>

@@ -92,10 +92,41 @@ pnpm build
 - [ ] /checkout en escritorio (1280px+): formulario a la izquierda, resumen sticky a la derecha
 - [ ] /gracias en móvil: datos bancarios legibles, sin texto cortado, botones de ancho completo
 - [ ] /gracias en escritorio: layout centrado, cómodo de leer
+- [ ] /admin en 1440px, 1280px, tablet y 430px: sin scroll horizontal, métricas legibles y cards en columna/2 columnas según espacio
+- [ ] /admin/orders en móvil: cards de pedidos, filtros con wrap limpio, botón Ver visible
+- [ ] /admin/orders/[id] en móvil: hero compacto, acciones sin cortes, timeline compacto
+- [ ] Drawer admin móvil abre/cierra como overlay y no ocupa espacio cerrado
 
 ---
 
-## 7. Deploy en Vercel
+## 7. Admin y seguridad
+
+- [ ] Probar `/admin/login` con contraseña inválida y válida
+- [ ] Probar `/admin`, `/admin/orders` y `/admin/orders/[id]` sin cookie: deben redirigir o responder no autorizado
+- [ ] Probar filtros de pedidos por estado, pago y búsqueda
+- [ ] Probar acciones: confirmar pago, confirmar pedido, marcar enviado, marcar entregado y cancelar
+- [ ] Confirmar que no se envía `processing`; registros legacy `processing` se tratan como `confirmed`
+- [ ] Confirmar que `SUPABASE_SERVICE_ROLE_KEY` solo se usa en servidor
+- [ ] Confirmar que `ADMIN_PASSWORD` y `ADMIN_SESSION_TOKEN` no tienen prefijo `NEXT_PUBLIC_`
+- [ ] Confirmar que el admin no usa `localStorage`
+
+---
+
+## 8. Pendiente antes de producción
+
+- [ ] Configurar datos bancarios reales
+- [ ] Configurar WhatsApp real
+- [ ] Configurar email real de pagos
+- [ ] Limpiar o cancelar pedidos de prueba
+- [ ] Revisar textos legales y reemplazar links `#`
+- [ ] Configurar variables en Vercel
+- [ ] Revisar Supabase RLS y confirmar que no hay SELECT público
+- [ ] Probar admin completo en desktop y móvil
+- [ ] Hacer build final con `pnpm build`
+
+---
+
+## 9. Deploy en Vercel
 
 - [ ] Conectar repositorio a Vercel (si no está conectado)
 - [ ] Verificar que el framework detectado es **Next.js**
@@ -106,7 +137,7 @@ pnpm build
 
 ---
 
-## 8. Post-deploy
+## 10. Post-deploy
 
 - [ ] Confirmar que los pedidos de prueba en producción aparecen en Supabase
 - [ ] Eliminar o marcar como cancelados los pedidos de prueba

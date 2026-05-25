@@ -149,7 +149,8 @@ export default function AdminOrderTimeline({ order }: Props) {
         return (
           <div
             key={step.key}
-            style={{ display: "flex", gap: "0.875rem", position: "relative" }}
+            className="admin-detail-timeline-step"
+            style={{ display: "flex", gap: "0.75rem", position: "relative" }}
           >
             {/* Dot + line */}
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, width: 28 }}>
@@ -175,7 +176,7 @@ export default function AdminOrderTimeline({ order }: Props) {
                   style={{
                     width: 2,
                     flex: 1,
-                    minHeight: 20,
+                    minHeight: 14,
                     background: lineColor,
                     marginTop: "2px",
                     marginBottom: "2px",
@@ -188,7 +189,7 @@ export default function AdminOrderTimeline({ order }: Props) {
             <div
               style={{
                 flex: 1,
-                paddingBottom: idx < steps.length - 1 ? "1rem" : 0,
+                paddingBottom: idx < steps.length - 1 ? "0.75rem" : 0,
                 paddingTop: "2px",
                 opacity: step.cancelled && step.key !== "delivered" ? 0.4 : 1,
               }}

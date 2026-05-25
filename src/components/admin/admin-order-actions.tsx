@@ -23,7 +23,7 @@ function buildActions(order: AdminOrder): Action[] {
     order.paymentStatus === "pending_cash_payment"
   ) {
     actions.push({
-      label: "✓ Confirmar pago",
+      label: "Confirmar pago",
       paymentStatus: "paid",
       color: "#064e3b",
       bg: "rgba(16,185,129,0.09)",
@@ -45,7 +45,7 @@ function buildActions(order: AdminOrder): Action[] {
 
   if (order.status === "confirmed" || order.status === "processing") {
     actions.push({
-      label: "🚚 Marcar enviado",
+      label: "Marcar enviado",
       status: "shipped",
       color: "#4c1d95",
       bg: "rgba(139,92,246,0.09)",
@@ -56,7 +56,7 @@ function buildActions(order: AdminOrder): Action[] {
 
   if (order.status === "shipped") {
     actions.push({
-      label: "✓ Entregado",
+      label: "Marcar entregado",
       status: "delivered",
       color: "#064e3b",
       bg: "rgba(16,185,129,0.09)",
@@ -126,9 +126,10 @@ export default function AdminOrderActions({ order }: Props) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+      <div className="admin-order-actions" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
         {actions.map((a) => (
           <button
+            className="admin-order-action-button"
             key={a.label}
             onClick={() => run(a)}
             disabled={isPending}

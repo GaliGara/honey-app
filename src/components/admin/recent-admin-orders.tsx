@@ -61,6 +61,7 @@ export default function RecentAdminOrders({
               borderLeft: critical ? "2.5px solid rgba(245,158,11,0.42)" : "2.5px solid transparent",
               textDecoration: "none",
               transition: "background 120ms ease",
+              minWidth: 0,
             }}
             onMouseEnter={(e) => {
               (e.currentTarget as HTMLAnchorElement).style.background = "rgba(212,175,55,0.06)";

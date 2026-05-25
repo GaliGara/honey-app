@@ -175,6 +175,7 @@ function Field({
           color: "#2C1E11",
           fontFamily: mono ? "monospace" : undefined,
           lineHeight: 1.4,
+          overflowWrap: "anywhere",
         }}
       >
         {value}
@@ -282,15 +283,7 @@ export default async function AdminOrderDetailPage({
         subtitle={`${createdDate} · ${createdTime}`}
       />
 
-      <main
-        style={{
-          flex: 1,
-          padding: "1.25rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-        }}
-      >
+      <main className="admin-page-main admin-page-main--compact">
         {/* Back link */}
         <Link
           href="/admin/orders"
@@ -471,7 +464,7 @@ export default async function AdminOrderDetailPage({
 
             {/* Products */}
             {order.items.length > 0 && (
-              <Card className="admin-fade-up-1">
+              <Card className="admin-fade-up-1 admin-detail-summary-card">
                 <CardTitle>Resumen del pedido</CardTitle>
 
                 {/* Product rows */}
@@ -479,6 +472,7 @@ export default async function AdminOrderDetailPage({
                   {order.items.map((item, i) => (
                     <div
                       key={item.id}
+                      className="admin-detail-product-row"
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
@@ -627,13 +621,14 @@ export default async function AdminOrderDetailPage({
             )}
 
             {/* Timeline */}
-            <Card className="admin-fade-up-2">
+            <Card className="admin-fade-up-2 admin-detail-timeline-card">
               <CardTitle>Actividad del pedido</CardTitle>
               <AdminOrderTimeline order={order} />
 
               {/* Siguiente paso */}
               {nextStep && (
                 <div
+                  className="admin-next-step"
                   style={{
                     marginTop: "0.875rem",
                     padding: "0.625rem 0.75rem",
@@ -675,7 +670,7 @@ export default async function AdminOrderDetailPage({
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 
             {/* Cliente & Envío (combined) */}
-            <Card className="admin-fade-up-1">
+            <Card className="admin-fade-up-1 admin-detail-customer-card">
               <CardTitle>Cliente</CardTitle>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
                 <Field label="Nombre" value={order.customerName} />
@@ -701,7 +696,7 @@ export default async function AdminOrderDetailPage({
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
                 <Field label="Calle / Dirección" value={order.address || undefined} />
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                <div className="admin-detail-field-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
                   <Field label="Ciudad" value={order.city || undefined} />
                   <Field label="Estado" value={order.state ?? undefined} />
                 </div>
@@ -738,7 +733,7 @@ export default async function AdminOrderDetailPage({
             </Card>
 
             {/* Pago */}
-            <Card className="admin-fade-up-2">
+            <Card className="admin-fade-up-2 admin-detail-payment-card">
               <CardTitle>Pago</CardTitle>
 
               {/* Method row */}
@@ -921,7 +916,7 @@ export default async function AdminOrderDetailPage({
 
         {/* ── Notes (full width) ────────────────────── */}
         <Card
-          className="admin-fade-up-3"
+          className="admin-fade-up-3 admin-detail-notes-card"
           style={{ opacity: 0.72, padding: "0.875rem 1.125rem" }}
         >
           <div

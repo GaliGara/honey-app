@@ -161,7 +161,9 @@ export async function updateOrder(
     cancelled_at?: string | null;
   } = {};
 
-  if (patch.status) update.status = patch.status;
+  if (patch.status) {
+    update.status = patch.status === "processing" ? "confirmed" : patch.status;
+  }
   if (patch.paymentStatus) {
     update.payment_status = patch.paymentStatus;
     if (patch.paymentStatus === "paid") {

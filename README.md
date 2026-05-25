@@ -63,6 +63,8 @@ cp docs/env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave anon (pública, RLS activo) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Clave service_role — **solo servidor**, nunca expongas en cliente |
+| `ADMIN_PASSWORD` | Contraseña del panel admin |
+| `ADMIN_SESSION_TOKEN` | Token aleatorio para cookie httpOnly del admin |
 
 > **Seguridad:** `SUPABASE_SERVICE_ROLE_KEY` bypasea RLS. Se usa únicamente en API Routes
 > (`src/app/api/`). Nunca uses esta clave con el prefijo `NEXT_PUBLIC_`.
@@ -97,15 +99,19 @@ pnpm build
 src/
 ├── app/
 │   ├── api/orders/        # API Route — crea pedidos (server-only)
+│   ├── api/admin/         # API Routes protegidas del admin
+│   ├── admin/             # Login y panel de administración
 │   ├── checkout/          # Página de checkout
 │   ├── gracias/           # Confirmación de pedido
 │   └── ...                # Resto de páginas
 ├── components/
+│   ├── admin/             # Shell, dashboard, pedidos y acciones admin
 │   ├── checkout/          # CheckoutForm, OrderSummary, CheckoutSuccessCard
 │   └── layout/            # Navbar, Footer
 ├── constants/
 │   └── payment.ts         # Config de pagos: datos bancarios, labels, URLs
 ├── lib/
+│   ├── admin/             # Auth cookie + consultas admin server-only
 │   ├── supabase/          # Cliente Supabase + servicio de órdenes (server-only)
 │   └── validations/       # Esquemas Zod
 ├── store/                 # Zustand: carrito
@@ -113,6 +119,7 @@ src/
 docs/
 ├── env.example            # Plantilla de variables de entorno
 ├── supabase-schema.sql    # Esquema completo de la base de datos
+├── admin-dashboard.md     # Guía de operación del admin
 ├── deployment-checklist.md
 └── manual-payments.md
 ```
@@ -121,10 +128,23 @@ docs/
 
 ## Notas importantes
 
-- **Sin autenticación** — no hay login de clientes. El panel de pedidos es un dashboard separado (no incluido en este repo).
+- **Sin autenticación de clientes** — `/cuenta` es una vista mock. El admin sí tiene login protegido con cookie httpOnly.
+- **Admin server-only** — `/admin` y rutas hijas usan `requireAdminAuth()`. Las API `/api/admin/*` validan cookie antes de leer o actualizar pedidos.
 - **Sin webhook** — los pedidos se confirman manualmente en Supabase tras verificar el comprobante de pago.
 - **Datos bancarios placeholder** — actualiza `src/constants/payment.ts` antes de hacer deploy a producción.
 - **Columnas de pasarela reservadas** — `payment_reference`, `payment_preference_id`, `payment_init_point`, `payment_status_detail` existen en la DB pero no se usan actualmente. Están reservadas para una futura integración con pasarela.
+
+## Pendiente antes de producción
+
+- Configurar datos bancarios reales en `src/constants/payment.ts`.
+- Configurar WhatsApp y email reales para comprobantes.
+- Revisar y publicar textos legales; hoy los links de privacidad y términos apuntan a `#`.
+- Reemplazar visuales CSS de productos con fotos reales si la tienda ya tendrá catálogo final.
+- Limpiar pedidos de prueba en Supabase.
+- Configurar variables en Vercel: Supabase, `ADMIN_PASSWORD` y `ADMIN_SESSION_TOKEN`.
+- Revisar RLS en Supabase y confirmar que no hay SELECT público.
+- Probar el flujo completo de admin: login, listado, filtros, detalle y acciones.
+- Ejecutar `pnpm build` antes de deploy.
 
 ---
 

@@ -46,15 +46,7 @@ export default async function AdminOrdersPage({
         subtitle={`${total} pedido${total !== 1 ? "s" : ""} en total`}
       />
 
-      <main
-        style={{
-          flex: 1,
-          padding: "1.25rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
-        }}
-      >
+      <main className="admin-page-main admin-page-main--compact">
         {/* Summary bar */}
         <AdminSummaryBar stats={stats} total={stats.totalOrders} />
 

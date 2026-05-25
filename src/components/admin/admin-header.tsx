@@ -141,6 +141,7 @@ export default function AdminHeader({ title, subtitle }: Props) {
 
       {/* Notifications (visual) */}
       <button
+        className="admin-header-notifications"
         aria-label="Notificaciones"
         title="Notificaciones (próximamente)"
         style={{
@@ -163,6 +164,7 @@ export default function AdminHeader({ title, subtitle }: Props) {
 
       {/* Admin avatar */}
       <div
+        className="admin-header-avatar"
         style={{
           display: "flex",
           alignItems: "center",

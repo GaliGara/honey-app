@@ -16,7 +16,6 @@ const LINES = {
   pending:  [4, 6, 5, 8, 6, 7, 6],
   revenue:  [80, 120, 100, 160, 140, 180, 165],
   today:    [0, 1, 0, 2, 1, 2, 3],
-  confirmed:[1, 2, 3, 2, 4, 3, 4],
 };
 
 interface CardProps {
@@ -83,7 +82,9 @@ function StatCard({
         }}>
           {label}
         </p>
-        <AdminSparkline data={sparkData} color={sparkColor} width={72} height={24} />
+        <span className="admin-stat-sparkline" style={{ display: "inline-flex" }}>
+          <AdminSparkline data={sparkData} color={sparkColor} width={72} height={24} />
+        </span>
       </div>
 
       {/* Value */}
@@ -150,11 +151,6 @@ const icons = {
       <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" />
     </svg>
   ),
-  box: (c: string) => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M20 7l-8-4-8 4m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-    </svg>
-  ),
 };
 
 /* ── Main ──────────────────────────────────────────────────── */
@@ -213,21 +209,6 @@ export default function AdminStats({ stats }: { stats: AdminStats }) {
         sparkData={LINES.today}
         sparkColor="#D4AF37"
       />
-
-      {stats.confirmedOrders > 0 && (
-        <StatCard
-          animClass="admin-fade-up-5"
-          label="En preparación"
-          value={String(stats.confirmedOrders)}
-          sub="Confirmados, pendientes de envío"
-          iconEl={<IB bg="rgba(139,92,246,0.1)" border="rgba(139,92,246,0.2)">{icons.box("#8b5cf6")}</IB>}
-          accentColor="#8b5cf6"
-          sparkData={LINES.confirmed}
-          sparkColor="#8b5cf6"
-          href="/admin/orders?status=confirmed"
-          hrefLabel="Ver →"
-        />
-      )}
     </div>
   );
 }

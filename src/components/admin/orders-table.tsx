@@ -189,6 +189,7 @@ export default function OrdersTable({ orders, total, currentPage }: Props) {
             <div
               key={order.id}
               onClick={() => router.push(`/admin/orders/${order.id}`)}
+              className="admin-order-mobile-card"
               style={{
                 background: "rgba(255,255,255,0.62)",
                 backdropFilter: "blur(8px)",
@@ -202,13 +203,14 @@ export default function OrdersTable({ orders, total, currentPage }: Props) {
                 gap: "0.6rem",
                 cursor: "pointer",
                 boxShadow: "0 1px 8px rgba(184,117,20,0.06)",
+                minWidth: 0,
               }}
             >
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem" }}>
-                <div>
-                  <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#B87514" }}>{order.orderNumber}</p>
-                  <p style={{ fontSize: "0.82rem", color: "#2C1E11" }}>{order.customerName}</p>
-                  <p style={{ fontSize: "0.7rem", color: "#6F5635" }}>{order.customerEmail}</p>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.75rem", minWidth: 0 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ fontWeight: 700, fontSize: "0.9rem", color: "#B87514", overflowWrap: "anywhere" }}>{order.orderNumber}</p>
+                  <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#2C1E11", overflowWrap: "anywhere" }}>{order.customerName}</p>
+                  <p style={{ fontSize: "0.7rem", color: "#6F5635", overflowWrap: "anywhere" }}>{order.customerEmail}</p>
                 </div>
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
                   <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "#2C1E11" }}>{MXN.format(order.total)}</p>
@@ -220,9 +222,35 @@ export default function OrdersTable({ orders, total, currentPage }: Props) {
                   </p>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap" }}>
-                <OrderStatusBadge status={order.status} />
-                <OrderPaymentBadge status={order.paymentStatus} />
+              <div className="admin-order-card-footer" style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: "0.625rem", alignItems: "end" }}>
+                <div style={{ display: "flex", gap: "0.3rem", flexWrap: "wrap", minWidth: 0 }}>
+                  <OrderStatusBadge status={order.status} />
+                  <OrderPaymentBadge status={order.paymentStatus} />
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); router.push(`/admin/orders/${order.id}`); }}
+                  aria-label={`Ver detalle ${order.orderNumber}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.3rem",
+                    minHeight: 34,
+                    padding: "0.4rem 0.7rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid rgba(184,117,20,0.24)",
+                    background: "rgba(255,255,255,0.72)",
+                    color: "#B87514",
+                    fontSize: "0.76rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  <EyeIcon />
+                  Ver
+                </button>
               </div>
             </div>
           );

@@ -117,8 +117,11 @@ export default function OrdersFilters({
       style={{ padding: "0.875rem 1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}
     >
       {/* Row 1: search + sort + clear */}
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-        <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
+      <div
+        className="admin-filter-primary-row"
+        style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}
+      >
+        <div className="admin-filter-search" style={{ position: "relative", flex: 1, minWidth: 0 }}>
           <span
             style={{
               position: "absolute", left: "0.65rem", top: "50%",
@@ -162,6 +165,7 @@ export default function OrdersFilters({
 
         {/* Sort indicator (visual) */}
         <span
+          className="admin-filter-sort"
           style={{
             display: "inline-flex", alignItems: "center", gap: "4px",
             padding: "0.42rem 0.7rem", borderRadius: "0.5rem",
@@ -180,6 +184,7 @@ export default function OrdersFilters({
 
         {hasFilters && (
           <button
+            className="admin-filter-clear"
             onClick={clearAll}
             style={{
               display: "inline-flex", alignItems: "center", gap: "3px",
@@ -203,7 +208,7 @@ export default function OrdersFilters({
       </div>
 
       {/* Row 2: pills */}
-      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+      <div className="admin-filter-pills" style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
         <span style={{ fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#B87514", flexShrink: 0 }}>
           Estado
         </span>
