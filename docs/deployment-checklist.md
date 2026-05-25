@@ -7,12 +7,12 @@ Completa cada punto en orden antes de hacer deploy a producción en Vercel.
 ## 1. Datos de pago (OBLIGATORIO antes de cualquier deploy)
 
 - [ ] Abrir `src/constants/payment.ts`
-- [ ] Reemplazar `bankName` con el nombre real del banco
-- [ ] Reemplazar `clabe` con la CLABE real (18 dígitos)
+- [ ] Reemplazar `bankName: "Nombre del banco"` con el nombre real del banco
+- [ ] Reemplazar `clabe: "000000000000000000"` con la CLABE real (18 dígitos)
 - [ ] Reemplazar `accountHolder` si difiere de "Honey Productos de la Colmena"
 - [ ] Reemplazar `whatsapp` con el número real (formato: `521XXXXXXXXXX`, sin + ni espacios)
-- [ ] Reemplazar `whatsappDisplay` con el número formateado para mostrar al cliente
-- [ ] Reemplazar `email` con el correo real para recibir comprobantes
+- [ ] Reemplazar `whatsappDisplay: "+52 000 000 0000"` con el número formateado para mostrar al cliente
+- [ ] Reemplazar `email: "pagos@honey.mx"` con el correo real para recibir comprobantes
 
 > Estos datos aparecen en la página /gracias y en el campo `payment_instructions`
 > guardado en Supabase con cada pedido.
@@ -30,6 +30,7 @@ Completa cada punto en orden antes de hacer deploy a producción en Vercel.
 - [ ] Agregar `ADMIN_PASSWORD` (contraseña del panel admin — nunca NEXT_PUBLIC_)
 - [ ] Agregar `ADMIN_SESSION_TOKEN` (token aleatorio ≥32 chars — generar con `openssl rand -base64 48`)
 - [ ] Verificar que `.env.local` NO está en el repositorio (lo cubre `.gitignore`)
+- [ ] Confirmar que `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD` y `ADMIN_SESSION_TOKEN` no tienen prefijo `NEXT_PUBLIC_`
 
 ---
 
@@ -43,6 +44,33 @@ Completa cada punto en orden antes de hacer deploy a producción en Vercel.
 - [ ] Confirmar que **no hay políticas RLS** que permitan lectura pública
   - La API Route usa `service_role` y bypasea RLS correctamente
   - Los clientes nunca leen pedidos directamente desde el frontend
+- [ ] Verificar manualmente que existen columnas de pago:
+  - `payment_provider`
+  - `payment_status`
+  - `payment_method`
+  - `payment_instructions`
+  - `manual_payment_reference`
+  - `paid_at`
+  - `cancelled_at`
+- [ ] Revisar pedidos de prueba y decidir si se cancelan o eliminan antes del deploy
+
+### SQL opcional para revisar/limpiar pedidos de prueba
+
+No ejecutes este bloque sin revisar primero el resultado del `SELECT`.
+`order_items` se elimina por cascada si borras filas de `orders`.
+
+```sql
+-- 1) Revisar candidatos de prueba
+SELECT id, order_number, customer_email, status, payment_status, created_at
+FROM orders
+ORDER BY created_at DESC;
+
+-- 2) Opcional: limpiar solo pedidos confirmados como prueba
+-- BEGIN;
+-- DELETE FROM orders
+-- WHERE order_number IN ('HNY-XXXX', 'HNY-YYYY');
+-- COMMIT;
+```
 
 ---
 
@@ -117,6 +145,12 @@ pnpm build
 - [ ] Configurar datos bancarios reales
 - [ ] Configurar WhatsApp real
 - [ ] Configurar email real de pagos
+- [ ] Crear y enlazar Aviso de privacidad
+- [ ] Crear y enlazar Términos y condiciones
+- [ ] Crear y enlazar Política de envíos
+- [ ] Crear y enlazar Política de cambios/devoluciones
+- [ ] Mantener `/cuenta` como dashboard mock hasta integrar Supabase Auth, o retirarlo del flujo público si no se usará
+- [ ] Agregar fotos reales de producto con `imageUrl`, `imageAlt` y `visualMode: "image"` cuando el catálogo final esté listo
 - [ ] Limpiar o cancelar pedidos de prueba
 - [ ] Revisar textos legales y reemplazar links `#`
 - [ ] Configurar variables en Vercel

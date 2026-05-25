@@ -133,12 +133,15 @@ docs/
 - **Sin webhook** — los pedidos se confirman manualmente en Supabase tras verificar el comprobante de pago.
 - **Datos bancarios placeholder** — actualiza `src/constants/payment.ts` antes de hacer deploy a producción.
 - **Columnas de pasarela reservadas** — `payment_reference`, `payment_preference_id`, `payment_init_point`, `payment_status_detail` existen en la DB pero no se usan actualmente. Están reservadas para una futura integración con pasarela.
+- **Productos sin fotos reales** — el catálogo usa visuales CSS. Para fotos finales agrega `imageUrl`, `imageAlt` y `visualMode: "image"` en `src/constants/products.ts`.
 
 ## Pendiente antes de producción
 
-- Configurar datos bancarios reales en `src/constants/payment.ts`.
-- Configurar WhatsApp y email reales para comprobantes.
+- Configurar datos bancarios reales en `src/constants/payment.ts`: banco, CLABE, WhatsApp y email.
+- No publicar con placeholders: `Nombre del banco`, `000000000000000000`, `+52 000 000 0000`, `pagos@honey.mx`.
 - Revisar y publicar textos legales; hoy los links de privacidad y términos apuntan a `#`.
+- Crear Aviso de privacidad, Términos y condiciones, Política de envíos y Política de cambios/devoluciones.
+- Mantener claro que `/cuenta` es dashboard mock hasta integrar Supabase Auth.
 - Reemplazar visuales CSS de productos con fotos reales si la tienda ya tendrá catálogo final.
 - Limpiar pedidos de prueba en Supabase.
 - Configurar variables en Vercel: Supabase, `ADMIN_PASSWORD` y `ADMIN_SESSION_TOKEN`.

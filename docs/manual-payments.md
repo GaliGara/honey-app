@@ -135,12 +135,12 @@ Todos los datos bancarios y de contacto están centralizados en un solo archivo:
 
 ```typescript
 export const manualPaymentConfig = {
-  bankName: "Nombre del banco",          // <-- reemplazar
+  bankName: "Nombre del banco",          // <-- reemplazar antes de producción
   accountHolder: "Honey Productos de la Colmena",
-  clabe: "000000000000000000",           // <-- reemplazar (18 dígitos)
-  whatsapp: "520000000000",             // <-- reemplazar (sin + ni espacios)
-  whatsappDisplay: "+52 000 000 0000",  // <-- reemplazar (formato visual)
-  email: "pagos@honey.mx",             // <-- reemplazar
+  clabe: "000000000000000000",           // <-- reemplazar antes de producción (18 dígitos)
+  whatsapp: "520000000000",             // <-- reemplazar antes de producción (sin + ni espacios)
+  whatsappDisplay: "+52 000 000 0000",  // <-- reemplazar antes de producción (formato visual)
+  email: "pagos@honey.mx",             // <-- reemplazar antes de producción
 } as const;
 ```
 
@@ -153,6 +153,9 @@ export const manualPaymentConfig = {
 1. Editar `src/constants/payment.ts` con los valores reales
 2. Ejecutar `pnpm build` para verificar que no hay errores
 3. Hacer deploy
+
+> Importante: no hagas deploy con `Nombre del banco`, `000000000000000000`,
+> `+52 000 000 0000` o `pagos@honey.mx`. Son valores placeholder.
 
 > No hay que tocar ningún otro archivo. Todas las vistas y la API Route importan
 > sus datos desde este archivo único.
@@ -172,6 +175,9 @@ WhatsApp: +52 55 1234 5678
 Email: pagos@honey.mx
 Tu pedido se confirmará cuando recibamos y validemos tu comprobante.
 ```
+
+> El bloque anterior es solo un ejemplo documental. Antes de producción,
+> reemplaza el email y los datos bancarios por valores reales.
 
 Para `cash_on_delivery`:
 ```

@@ -121,6 +121,7 @@ src/lib/admin/
 - Configurar datos bancarios reales en `src/constants/payment.ts`.
 - Configurar WhatsApp real para comprobantes.
 - Configurar email real de pagos.
+- `/cuenta` es dashboard mock hasta integrar Supabase Auth; no depende del login admin.
 - Limpiar pedidos de prueba en Supabase.
 - Revisar textos legales y reemplazar links temporales.
 - Configurar variables en Vercel: Supabase, `ADMIN_PASSWORD`, `ADMIN_SESSION_TOKEN`.

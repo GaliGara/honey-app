@@ -8,6 +8,9 @@ const FOOTER_LINKS = [
 ] as const;
 
 const LEGAL_LINKS = [
+  // TODO(producción): reemplazar links temporales cuando existan páginas legales reales:
+  // Aviso de privacidad, términos y condiciones, política de envíos,
+  // y política de cambios/devoluciones.
   { label: "Privacidad", href: "#" },
   { label: "Términos",   href: "#" },
 ] as const;

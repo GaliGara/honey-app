@@ -4,19 +4,19 @@ import type { PaymentMethod, PaymentStatus } from "@/types/order";
  * Configuración de pagos manuales.
  *
  * ⚠ PLACEHOLDER — Estos datos son ficticios.
- *   Reemplazar con información bancaria real antes del lanzamiento.
+ *   REEMPLAZAR ANTES DE PRODUCCIÓN con información bancaria real.
  */
 export const manualPaymentConfig = {
-  /** TODO: Nombre real del banco (ej: "BBVA", "Santander") */
+  /** TODO(producción): reemplazar con el nombre real del banco (ej: "BBVA", "Santander"). */
   bankName: "Nombre del banco",
   accountHolder: "Honey Productos de la Colmena",
-  /** TODO: CLABE interbancaria real (18 dígitos) */
+  /** TODO(producción): reemplazar con la CLABE interbancaria real (18 dígitos). */
   clabe: "000000000000000000",
-  /** Sin `+` ni espacios — para links wa.me */
+  /** TODO(producción): reemplazar con WhatsApp real, sin `+` ni espacios — para links wa.me. */
   whatsapp: "520000000000",
-  /** Con formato — para mostrar en UI */
+  /** TODO(producción): reemplazar con WhatsApp real en formato visible. */
   whatsappDisplay: "+52 000 000 0000",
-  /** TODO: email real de pagos */
+  /** TODO(producción): reemplazar con el email real de pagos/comprobantes. */
   email: "pagos@honey.mx",
 } as const;
 
